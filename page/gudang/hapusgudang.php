@@ -1,47 +1,35 @@
 <?php
-// Pastikan koneksi database sudah tersedia
-if (!isset($koneksi)) {
-    die("Koneksi database tidak tersedia!");
+// Pastikan halaman ini dilindungi dari akses langsung
+if (!isset($_GET['kode_barang'])) {
+    die('Kode barang tidak ditemukan.');
 }
 
-// Pastikan kode_barang diterima dengan benar
-if (isset($_GET['kode_barang']) && !empty($_GET['kode_barang'])) {
-    // Amankan data inputan dari user untuk menghindari SQL Injection
-    $kode_barang = mysqli_real_escape_string($koneksi, $_GET['kode_barang']);
+// Ambil kode barang dari parameter URL
+$kode_barang = $_GET['kode_barang'];
 
-    // Cek apakah kode_barang ada di dalam tabel gudang
-    $check = $koneksi->query("SELECT nama_barang FROM gudang WHERE kode_barang='$kode_barang'");
+// Koneksi ke database
+include 'koneksibarang.php'; // Pastikan koneksi.php sesuai dengan pengaturan database Anda
 
-    // Jika data ditemukan
-    if ($check && $check->num_rows > 0) {
-        // Hapus data barang dari tabel gudang
-        $sql = $koneksi->query("DELETE FROM gudang WHERE kode_barang='$kode_barang'");
+// Query untuk menghapus data barang berdasarkan kode_barang
+$sql = "DELETE FROM gudang WHERE kode_barang = ?";
+$stmt = $koneksi->prepare($sql);
+$stmt->bind_param("s", $kode_barang);
 
-        // Jika penghapusan berhasil
-        if ($sql) {
-            echo "<script type='text/javascript'>
-                    alert('Data Barang Berhasil Dihapus');
-                    window.location.href = '?page=gudang';
-                  </script>";
-        } else {
-            // Jika gagal menghapus data, tampilkan error
-            echo "<script type='text/javascript'>
-                    alert('Gagal Menghapus Data Barang');
-                    window.location.href = '?page=gudang';
-                  </script>";
-        }
-    } else {
-        // Jika kode_barang tidak ditemukan di database
-        echo "<script type='text/javascript'>
-                alert('Data Barang Tidak Ditemukan');
-                window.location.href = '?page=gudang';
-              </script>";
-    }
+if ($stmt->execute()) {
+    // Jika berhasil, redirect ke halaman utama dengan pesan sukses
+    echo "<script>
+            alert('Data berhasil dihapus!');
+            window.location.href = '?page=gudang';
+          </script>";
 } else {
-    // Jika tidak ada kode_barang yang diterima dari URL
-    echo "<script type='text/javascript'>
-            alert('Kode Barang Tidak Ditemukan');
+    // Jika gagal, tampilkan pesan error
+    echo "<script>
+            alert('Terjadi kesalahan dalam menghapus data!');
             window.location.href = '?page=gudang';
           </script>";
 }
+
+// Tutup koneksi dan statement
+$stmt->close();
+$koneksi->close();
 ?>

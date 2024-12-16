@@ -121,28 +121,6 @@ $koneksi = new mysqli("localhost", "root", "", "webinventory");
       <div class="sidebar-heading">
         Pilih Menu
       </div>
-
-      <!-- Data Master -->
-      <li class="nav-item active">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseData" aria-expanded="true"
-          aria-controls="collapseData">
-          <i class="fas fa-fw fa-folder"></i>
-          <span>Data Master</span>
-        </a>
-        <div id="collapseData" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Menu:</h6>
-            <a class="collapse-item" href="?page=aset">Asset Management</a>
-            <a class="collapse-item" href="?page=jenisbarang">Jenis Barang</a>
-            <a class="collapse-item" href="?page=satuanbarang">Satuan Barang</a>
-            <a class="collapse-item" href="?page=gudang">Data Barang</a>
-            <a class="collapse-item" href="?page=departemen">Departement</a>
-            <a class="collapse-item" href="?page=daftarkaryawan">Daftar Karyawan</a>
-
-          </div>
-        </div>
-      </li>
-
       <!-- Transaksi -->
       <li class="nav-item active">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages" aria-expanded="true"
@@ -159,6 +137,28 @@ $koneksi = new mysqli("localhost", "root", "", "webinventory");
           </div>
         </div>
       </li>
+      
+      <!-- Data Master -->
+      <li class="nav-item active">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseData" aria-expanded="true"
+          aria-controls="collapseData">
+          <i class="fas fa-fw fa-folder"></i>
+          <span>Data Master</span>
+        </a>
+        <div id="collapseData" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Menu:</h6>
+            <a class="collapse-item" href="?page=gudang">Gudang</a>
+            <a class="collapse-item" href="?page=jenisbarang">Jenis Barang</a>
+            <a class="collapse-item" href="?page=aset">Asset Management</a>
+            <a class="collapse-item" href="?page=satuanbarang">Satuan Barang</a>
+            <a class="collapse-item" href="?page=departemen">Departement</a>
+            <a class="collapse-item" href="?page=daftarkaryawan">Daftar Karyawan</a>
+
+          </div>
+        </div>
+      </li>
+
 
       <!-- Laporan -->
       <li class="nav-item active">

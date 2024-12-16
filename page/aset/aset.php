@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Asset Management</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Asset Inventaris Karyawan</h6>
         </div>
         <div class="card-body">
             <!-- Tombol Tambah Barang -->
@@ -13,7 +13,7 @@
             </div>
 
 
-            <!-- Filter Tanggal dan Status -->
+             <!-- Filter Tanggal dan Status -->
             <div class="row mb-3">
                 <div class="col-md-6">
                     <div class="input-group">
@@ -44,12 +44,12 @@
                             <th style="width: 50px; text-align: center;">No</th>
                             <th style="width: 150px; text-align: center;">Kode Aset</th>
                             <th style="width: 150px; text-align: center;">Departemen</th>
-                            <th style="width: 150px; text-align: center;">Nama Aset</th>
+                            <th style="width: 150px; text-align: center;">Nama Barang</th>
                             <th style="width: 100px; text-align: center;">Karyawan</th>
+                            <th style="width: 100px; text-align: center;">Bagian</th>
                             <th style="width: 200px; text-align: center;">Lokasi</th>
                             <th style="width: 100px; text-align: center;">Status</th>
-                            <th style="width: 150px; text-align: center;">Tanggal Pembelian</th>
-                            <th style="width: 100px; text-align: center;">Kondisi</th>
+                            <th style="width: 150px; text-align: center;">Tanggal Penyerahan</th>
                             <th style="width: 200px; text-align: center;">Pengaturan</th>
                         </tr>
                     </thead>
@@ -57,16 +57,19 @@
                         <?php
                         $no = 1;
                         $sql = $koneksi->query("
-                        SELECT aset.*, 
-                               daftar_karyawan.nama AS nama_karyawan, 
-                               daftar_karyawan.bagian, 
-                               departemen.nama AS nama_departemen, 
-                                jenis_barang.jenis_barang 
-                        FROM aset
-                        LEFT JOIN daftar_karyawan ON aset.karyawan_id = daftar_karyawan.id
-                        LEFT JOIN departemen ON aset.departemen_id = departemen.id
-                        LEFT JOIN jenis_barang ON aset.jenis_barang_id = jenis_barang.id
-                    ");
+                            SELECT aset.*, 
+                                daftar_karyawan.nama AS nama_karyawan, 
+                                daftar_karyawan.bagian, 
+                                departemen.nama AS nama_departemen, 
+                                jenis_barang.jenis_barang, 
+                                gudang.nama_barang
+                            FROM aset
+                            LEFT JOIN daftar_karyawan ON aset.karyawan_id = daftar_karyawan.id
+                            LEFT JOIN departemen ON aset.departemen_id = departemen.id
+                            LEFT JOIN jenis_barang ON aset.jenis_barang_id = jenis_barang.id
+                            LEFT JOIN gudang ON aset.kode_barang = gudang.kode_barang
+                        ");
+
                     
                         if ($sql === false) {
                             die('Error SQL: ' . $koneksi->error); // Tampilkan pesan error jika query gagal
@@ -77,12 +80,12 @@
                                     <td style="text-align: center;"><?php echo $no++; ?></td>
                                     <td style="text-align: center;"><?php echo $data['kode_lengkap'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['nama_departemen'] ?></td>
-                                    <td style="text-align: center;"><?php echo $data['nama_aset'] ?></td>
+                                    <td style="text-align: center;"><?php echo $data['nama_barang']; ?></td>
                                     <td style="text-align: center;"><?php echo $data['nama_karyawan'] ?></td>
+                                    <td style="text-align: center;"><?php echo $data['bagian'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['lokasi'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['status'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['tanggal_pembelian'] ?></td>
-                                    <td style="text-align: center;"><?php echo $data['kondisi'] ?></td>
                                     <td style="text-align: center;">
                                         <a href="?page=aset&aksi=ubahaset&id=<?php echo $data['id']; ?>"
                                             class="btn btn-info btn-sm custom-btn">

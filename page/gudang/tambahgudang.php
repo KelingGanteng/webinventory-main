@@ -40,30 +40,15 @@
 							</div>
 						</div>
 
-						<label for="">Kondisi</label>
-						<div class="form-group">
-							<div class="form-line">
-								<div class="checkbox-list">
-									<?php
-									// Daftar kondisi barang yang bisa dipilih
-									$kondisi_options = ['Baik', 'Rusak', 'bekas']; // Misalnya, daftar kondisi barang
-									foreach ($kondisi_options as $kondisi) {
-										echo "<label class='checkbox-inline'>
-                        			<input type='checkbox' name='kondisi[]' value='" . $kondisi . "' /> " . $kondisi . "
-                      				</label>&nbsp;&nbsp;";
-									}
-									?>
-								</div>
-							</div>
-						</div>
 
 						<label for="jumlah">Jumlah</label>
 						<div class="form-group">
 							<div class="form-line">
 								<input type="number" name="jumlah" class="form-control" style="max-width: 70px;"
-									inputmode="numeric" min="0" step="1" />
+									inputmode="numeric" min="0" step="1" value="0" readonly />
 							</div>
 						</div>
+
 
 
 						<label for="">Satuan Barang</label>
@@ -89,18 +74,12 @@
 					if (isset($_POST['simpan'])) {
 						$kode_barang = $_POST['kode_barang'];
 						$nama_barang = $_POST['nama_barang'];
-						$kondisi = $_POST['kondisi'];
 						$jenis_barang = $_POST['jenis_barang'];
 						$jumlah = $_POST['jumlah'];
 						$satuan = $_POST['satuan'];
 
 
-						// Memproses kondisi (dari checkbox)
-						if (isset($_POST['kondisi'])) {
-							$kondisi = implode(", ", $_POST['kondisi']); // Menyimpan kondisi yang dipilih dalam format string
-						} else {
-							$kondisi = "Tidak diketahui"; // Default jika tidak ada kondisi yang dipilih
-						}
+
 
 						$cek = $koneksi->query("SELECT kode_barang FROM gudang WHERE kode_barang='$kode_barang'");
 						if ($cek->num_rows > 0) {
@@ -109,9 +88,9 @@
 							</script>";
 						} else {
 							$sql = $koneksi->query("INSERT INTO gudang 
-								(kode_barang, nama_barang, kondisi, jenis_barang, jumlah, satuan) 
+								(kode_barang, nama_barang, jenis_barang, jumlah, satuan) 
 								VALUES 
-								('$kode_barang', '$nama_barang', '$kondisi', '$jenis_barang', '$jumlah', '$satuan')");
+								('$kode_barang', '$nama_barang', '$jenis_barang', '$jumlah', '$satuan')");
 
 							if ($sql) {
 								echo "<script>

@@ -28,12 +28,11 @@
                         <?php
                         // Query untuk mengambil data dari tabel daftar_karyawan dan departemen
                         $sql = $koneksi->query("
-                        SELECT dk.id, dk.nama AS daftar_karyawan, dk.bagian, d.nama AS departemen
-                        FROM daftar_karyawan dk
-                        LEFT JOIN departemen d ON dk.departemen_id = d.id
-                        ORDER BY dk.id ASC
-                    ");
-
+                            SELECT dk.id, dk.nama AS daftar_karyawan, dk.bagian, d.nama AS departemen
+                            FROM daftar_karyawan dk
+                            LEFT JOIN departemen d ON dk.departemen_id = d.id
+                            ORDER BY dk.id ASC
+                        ");
                         while ($data = $sql->fetch_assoc()) {
                             ?>
                             <tr>

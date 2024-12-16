@@ -1,219 +1,103 @@
-<script>
-	function sum() {
-		var stok = document.getElementById('stok').value;
-		var jumlahmasuk = document.getElementById('jumlahmasuk').value;
-		var result = parseInt(stok) + parseInt(jumlahmasuk);
-		if (!isNaN(result)) {
-			document.getElementById('jumlah').value = result;
-		}
-	}
-
-	function updateTotalStok() {
-		var stok = parseInt(document.getElementById('stok').value) || 0;
-		var jumlahmasuk = parseInt(document.getElementById('jumlahmasuk').value) || 0;
-		var totalStok = stok + jumlahmasuk;
-		document.getElementById('jumlah').value = totalStok;
-	}
-
-</script>
-
 <?php
+// Cek apakah form disubmit
+if (isset($_POST['submit'])) {
+    // Ambil data dari form
+    $aset_id = $_POST['aset_id'];
+    $tanggal_masuk = $_POST['tanggal_masuk'];
+    $jumlah = $_POST['jumlah'];
+    $harga = $_POST['harga'];
 
-$koneksi = new mysqli("localhost", "root", "", "webinventory");
+    // Query untuk menyimpan data barang masuk
+    $sql = $koneksi->query("INSERT INTO barang_masuk (aset_id, tanggal_masuk, jumlah, harga) 
+                            VALUES ('$aset_id', '$tanggal_masuk', '$jumlah', '$harga')");
 
-// Periksa apakah koneksi berhasil
-if ($koneksi->connect_error) {
-	die("Koneksi gagal: " . $koneksi->connect_error);
+    // Cek apakah query berhasil
+    if ($sql) {
+        echo "<script>alert('Data barang masuk berhasil ditambahkan!'); window.location='?page=barangmasuk';</script>";
+    } else {
+        echo "<script>alert('Terjadi kesalahan, data gagal ditambahkan!');</script>";
+    }
 }
-
-// Query untuk mendapatkan id_transaksi terakhir
-$no = mysqli_query($koneksi, "SELECT id_transaksi FROM barang_masuk ORDER BY id_transaksi DESC LIMIT 1");
-
-// Periksa apakah query berhasil dan ada hasil
-if ($no && mysqli_num_rows($no) > 0) {
-	// Ambil data id_transaksi terakhir
-	$idtran = mysqli_fetch_array($no);
-	$kode = $idtran['id_transaksi'];
-
-	// Ambil urutan nomor transaksi
-	$urut = substr($kode, 8, 3);
-	$tambah = (int) $urut + 1;
-} else {
-	// Jika tidak ada data, mulai dari urutan 001
-	$tambah = 1;
-}
-
-// Format nomor transaksi
-$bulan = date("m");
-$tahun = date("y");
-
-if (strlen($tambah) == 1) {
-	$format = "MIS-" . $bulan . $tahun . "00" . $tambah;
-} else if (strlen($tambah) == 2) {
-	$format = "MIS-" . $bulan . $tahun . "0" . $tambah;
-} else {
-	$format = "MIS-" . $bulan . $tahun . $tambah;
-}
-
-// Tanggal masuk
-$tanggal_masuk = date("Y-m-d");
-
 ?>
+
+<!-- Begin Page Content -->
 <div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Tambah Barang Masuk</h6>
+        </div>
+        <div class="card-body">
+            <!-- Form untuk tambah barang masuk -->
+            <form method="POST" action="">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="aset_id" class="form-label">Aset</label>
+                            <select id="aset_id" name="aset_id" class="form-control" required>
+                                <option value="">Pilih Aset</option>
+                                <?php
+                                // Query untuk mengambil data aset
+                                $query_aset = $koneksi->query("SELECT id, nama_aset FROM aset");
+                                while ($data_aset = $query_aset->fetch_assoc()) {
+                                    echo "<option value='{$data_aset['id']}'>{$data_aset['nama_aset']}</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="tanggal_masuk" class="form-label">Tanggal Masuk</label>
+                            <input type="date" id="tanggal_masuk" name="tanggal_masuk" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
 
-	<!-- DataTales Example -->
-	<div class="card shadow mb-4">
-		<div class="card-header py-3">
-			<h6 class="m-0 font-weight-bold text-primary">Tambah Barang Masuk</h6>
-		</div>
-		<div class="card-body">
-			<div class="table-responsive">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="jumlah" class="form-label">Jumlah</label>
+                            <input type="number" id="jumlah" name="jumlah" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="harga" class="form-label">Harga</label>
+                            <input type="number" id="harga" name="harga" class="form-control" step="0.01" required>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Tombol Simpan -->
+                <button type="submit" name="submit" class="btn btn-primary custom-btn">
+                    <i class="fas fa-save me-2"></i> Simpan
+                </button>
+                <a href="?page=barangmasuk" class="btn btn-secondary custom-btn">
+                    <i class="fas fa-arrow-left me-2"></i> Kembali
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
 
-				<div class="body">
+<!-- CSS untuk tombol -->
+<style>
+    /* Custom button styling */
+    .custom-btn {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
 
-					<form method="POST" enctype="multipart/form-data">
+    .custom-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    }
 
-						<label for="">Id Transaksi</label>
-						<div class="form-group">
-							<div class="form-line">
-								<input type="text" name="id_transaksi" class="form-control" id="id_transaksi"
-									value="<?php echo $format; ?>" readonly />
-							</div>
-						</div>
-
-
-
-						<label for="">Tanggal Masuk</label>
-						<div class="form-group">
-							<div class="form-line">
-								<input type="date" name="tanggal_masuk" class="form-control" id="tanggal_masuk"
-									value="<?php echo $tanggal_masuk; ?>" />
-							</div>
-						</div>
-
-
-						<!-- Input Barang -->
-						<label for="">Barang</label>
-						<div class="form-group">
-							<div class="form-line">
-								<select name="barang" id="cmb_barang" class="form-control" onchange="updateTotalStok()">
-									<option value="">-- Pilih Barang --</option>
-									<?php
-									$sql = $koneksi->query("SELECT * FROM gudang ORDER BY kode_barang");
-									while ($data = $sql->fetch_assoc()) {
-										echo "<option value='$data[kode_barang].$data[nama_barang]' " .
-											($barang == $data['kode_barang'] ? "selected" : "") . ">$data[kode_barang] | $data[nama_barang]</option>";
-									}
-									?>
-								</select>
-							</div>
-						</div>
-
-						<!-- Inisialisasi Select2 -->
-						<script>
-							$(document).ready(function () {
-								// Mengaktifkan Select2 pada elemen dengan id cmb_barang
-								$('#cmb_barang').select2({
-									placeholder: "-- Pilih Barang --",
-									allowClear: true,
-									width: '100%',           // Menyesuaikan lebar dropdown
-									minimumInputLength: 2,   // Set minimum karakter untuk mulai pencarian
-									maximumSelectionLength: 5 // Batasi jumlah pilihan yang dapat dipilih
-								});
-
-							});
-						</script>
-
-
-						<div class="tampung"></div>
-						<label for="kondisi">Kondisi</label>
-						<div class="form-group">
-							<div class="form-line">
-								<!-- Menampilkan checkbox dalam format sederhana -->
-								<div class="checkbox-group">
-									<label><input type="checkbox" name="kondisi[]" value="Baik" /> Baik</label>
-									<label><input type="checkbox" name="kondisi[]" value="Rusak" /> Rusak</label>
-									<label><input type="checkbox" name="kondisi[]" value="Bekas" /> Bekas</label>
-								</div>
-							</div>
-						</div>
-
-						<label for="jumlah">Jumlah</label>
-						<div class="form-group">
-							<div class="form-line">
-								<input type="number" name="jumlahmasuk" class="form-control" style="max-width: 70px;"
-									inputmode="numeric" min="0" step="1" id="jumlahmasuk"
-									onchange="updateTotalStok()" />
-							</div>
-						</div>
-
-
-						<label for="jumlah">Total Stok</label>
-						<div class="form-group">
-							<div class="form-line">
-								<!-- Menampilkan stok yang ada di gudang + jumlah yang dimasukkan -->
-								<input readonly="readonly" name="jumlah" id="jumlah" type="number" class="form-control"
-									value="<?php echo $stok_gudang; ?>" />
-							</div>
-						</div>
-						<div class="tampung1"></div>
-
-
-
-						<input type="submit" name="simpan" value="Simpan" class="btn btn-primary">
-
-					</form>
-
-
-
-					<?php
-					if (isset($_POST['simpan'])) {
-						$id_transaksi = $_POST['id_transaksi'];
-						$tanggal = $_POST['tanggal_masuk'];
-						$barang = $_POST['barang'];
-						$pecah_barang = explode(".", $barang);
-						$kode_barang = $pecah_barang[0];
-						$nama_barang = $pecah_barang[1];
-						$jumlah = $_POST['jumlahmasuk'];
-						$satuan = $_POST['satuan'];
-						$satuan = $_POST['satuan'];
-						$kondisi = isset($_POST['kondisi']) ? implode(", ", $_POST['kondisi']) : ''; // Gabungkan kondisi yang dipilih dengan koma
-					
-						// Simpan data barang masuk
-						$sql = $koneksi->query("INSERT INTO barang_masuk (id_transaksi, tanggal, kode_barang, nama_barang, jumlah, satuan, kondisi) 
-                                            VALUES ('$id_transaksi', '$tanggal', '$kode_barang', '$nama_barang', '$jumlah', '$satuan', '$kondisi')");
-						if ($sql) {
-							echo "<script>alert('Data berhasil disimpan!'); window.location.href='?page=barangmasuk';</script>";
-						} else {
-							echo "<script>alert('Gagal menyimpan data!');</script>";
-						}
-					}
-					?>
-				</div>
-			</div>
-		</div>
-
-		<head>
-			<!-- Link CSS Select2 -->
-			<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-
-			<!-- Link JS Select2 -->
-			<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-
-		</head>
-	</div>
-
-	<?php
-	if (isset($_GET['barang'])) {
-		$barang = $_GET['barang'];
-		$kode_barang = explode('.', $barang)[0]; // Ambil kode barang dari parameter
-	
-		// Ambil stok barang yang ada di gudang
-		$sql_stok = $koneksi->query("SELECT stok FROM gudang WHERE kode_barang = '$kode_barang'");
-		$data_stok = $sql_stok->fetch_assoc();
-		$stok_gudang = $data_stok['stok'] ?? 0; // Ambil stok, jika tidak ada, default ke 0
-	} else {
-		$stok_gudang = 0; // Default stok 0 jika barang belum dipilih
-	}
-	?>
+    .custom-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
+    }
+</style>

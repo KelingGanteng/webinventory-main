@@ -21,7 +21,6 @@
               <th style="width: 50px; text-align: center; vertical-align: middle;">No</th>
               <th style="width: 200px; text-align: center; vertical-align: middle;">Kode Barang</th>
               <th style="width: 150px; text-align: center; vertical-align: middle;">Nama Barang</th>
-              <th style="width: 120px; text-align: center; vertical-align: middle;">Kondisi</th>
               <th style="width: 120px; text-align: center; vertical-align: middle;">Jenis Barang</th>
               <th style="width: 120px; text-align: center; vertical-align: middle;">Jumlah</th>
               <th style="width: 120px; text-align: center; vertical-align: middle;">Satuan Barang</th>
@@ -38,7 +37,6 @@
                 <td><?php echo $no++; ?></td>
                 <td><?php echo htmlspecialchars($data['kode_barang']); ?></td>
                 <td><?php echo htmlspecialchars($data['nama_barang']); ?></td>
-                <td><?php echo htmlspecialchars($data['kondisi']); ?></td>
                 <td><?php echo htmlspecialchars($data['jenis_barang']); ?></td>
                 <td><?php echo htmlspecialchars($data['jumlah']); ?></td>
                 <td><?php echo htmlspecialchars($data['satuan']); ?></td>

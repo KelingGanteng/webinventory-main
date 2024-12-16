@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($kode_aset && $nomor_urut) {
         // Format nomor urut dengan padding 4 digit
         $nomor_urut = str_pad($nomor_urut, 4, '0', STR_PAD_LEFT);
-        
+
         // Ambil nama jenis barang untuk digunakan dalam kode lengkap
         $sql_jenis_barang = $koneksi->query("SELECT jenis_barang FROM jenis_barang WHERE code_barang = '$kode_aset'");
         $data_jenis_barang = $sql_jenis_barang->fetch_assoc();
@@ -25,13 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Ambil data lainnya dari form
-    $nama_aset = $_POST['nama_aset'];
+    $nama_barang = $_POST['nama_barang'];
     $departemen_id = $_POST['departemen_id'];
     $lokasi = $_POST['lokasi'];
     $status = $_POST['status'];
     $tanggal_pembelian = $_POST['tanggal_pembelian'];
     $karyawan_id = $_POST['karyawan_id'];
-    $kondisi = $_POST['kondisi'];
 
     // Validasi karyawan_id
     $karyawan_check = $koneksi->query("SELECT id FROM daftar_karyawan WHERE id = '$karyawan_id'");
@@ -48,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Query untuk menyimpan data ke database
-    $sql = "INSERT INTO aset (kode_aset, kode_lengkap, nama_aset, departemen_id, lokasi, status, tanggal_pembelian, karyawan_id, kondisi) 
-            VALUES ('$kode_aset', '$kode_lengkap', '$nama_aset', '$departemen_id', '$lokasi', '$status', '$tanggal_pembelian', '$karyawan_id', '$kondisi')";
+    $sql = "INSERT INTO aset (kode_aset, kode_lengkap, nama_barang, departemen_id, lokasi, status, tanggal_pembelian, karyawan_id) 
+            VALUES ('$kode_aset', '$kode_lengkap', '$nama_barang', '$departemen_id', '$lokasi', '$status', '$tanggal_pembelian', '$karyawan_id')";
 
     if ($koneksi->query($sql) === TRUE) {
         echo "<script>alert('Data aset berhasil ditambahkan!'); window.location.href='?page=aset';</script>";
@@ -71,20 +70,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
         <div class="card-body">
             <form method="POST">
-              <!-- Input untuk Kode Aset -->
-        <div class="mb-3">
-            <label for="kode_aset" class="form-label">Kode Aset</label>
-            <select class="form-control" id="kode_aset" name="kode_aset" required>
-                <option value="">Pilih Kode Aset</option>
-                <?php
-                // Ambil data Kode Aset dari tabel jenis_barang
-                $sql = $koneksi->query("SELECT * FROM jenis_barang");
-                while ($data = $sql->fetch_assoc()) {
-                    echo "<option value='" . $data['code_barang'] . "'>" . $data['code_barang'] . " - " . $data['jenis_barang'] . "</option>";
-                }
-                ?>
-            </select>
-        </div>
+                <!-- Input untuk Kode Aset -->
+                <div class="mb-3">
+                    <label for="kode_aset" class="form-label">Kode Aset</label>
+                    <select class="form-control" id="kode_aset" name="kode_aset" required>
+                        <option value="">Pilih Kode Aset</option>
+                        <?php
+                        // Ambil data Kode Aset dari tabel jenis_barang
+                        $sql = $koneksi->query("SELECT * FROM jenis_barang");
+                        while ($data = $sql->fetch_assoc()) {
+                            echo "<option value='" . $data['code_barang'] . "'>" . $data['code_barang'] . " - " . $data['jenis_barang'] . "</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
 
                 <!-- Tempat untuk menampilkan input Nomor Urut -->
                 <div id="nomor_urut_container" class="mb-3" style="display:none;">
@@ -108,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         });
 
                         // JavaScript untuk menampilkan input nomor urut ketika memilih kode aset
-                        document.getElementById('kode_aset').addEventListener('change', function () {
+                        document.getElementById('kode_aset').addEventListener('change', function() {
                             var kodeAset = this.value;
                             var nomorUrutContainer = document.getElementById('nomor_urut_container');
                             var kodeLengkap = document.getElementById('kode_lengkap');
@@ -125,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         });
 
                         // Menangani perubahan pada input nomor urut
-                        document.getElementById('nomor_urut').addEventListener('input', function () {
+                        document.getElementById('nomor_urut').addEventListener('input', function() {
                             var kodeAset = document.getElementById('kode_aset').value;
                             var nomorUrut = this.value;
                             var kodeLengkap = document.getElementById('kode_lengkap');
@@ -146,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             var xhr = new XMLHttpRequest();
                             xhr.open("POST", "check_kode_aset.php", true);
                             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                            xhr.onload = function () {
+                            xhr.onload = function() {
                                 if (xhr.status === 200) {
                                     var response = xhr.responseText.trim();
                                     if (response === "exists") {
@@ -200,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <!-- Input untuk Lokasi -->
                 <div class="mb-3">
                     <label for="lokasi" class="form-label">Lokasi</label>
-                    <input type="text" class="form-control" id="lokasi" name="lokasi" required>
+                    <input type="text" class="form-control" id="lokasi" name="lokasi" >
                 </div>
 
                 <!-- Input untuk Status -->
@@ -214,18 +213,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <!-- Input untuk Tanggal Pembelian -->
                 <div class="mb-3">
-                    <label for="tanggal_pembelian" class="form-label">Tanggal Pembelian</label>
+                    <label for="tanggal_pembelian" class="form-label">Tanggal Penyerahan</label>
                     <input type="date" class="form-control" id="tanggal_pembelian" name="tanggal_pembelian" required>
                 </div>
 
-                <!-- Input untuk Kondisi -->
-                <div class="mb-3">
-                    <label for="kondisi" class="form-label">Kondisi</label>
-                    <select id="kondisi" name="kondisi" class="form-control" required>
-                        <option value="Baik">Baik</option>
-                        <option value="Rusak">Rusak</option>
-                    </select>
-                </div>
+               
 
                 <!-- Tombol Submit -->
                 <div class="mb-3">
