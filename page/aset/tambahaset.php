@@ -4,7 +4,7 @@ include('koneksibarang.php');
 
 // Mengecek apakah form sudah disubmit
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Memeriksa apakah 'kode_aset' dan 'nomor_urut' ada dalam form
+    // Memeriksa apakah 'kode_aset' dan 'nomor_urut' ada dalam formjoi
     $kode_aset = isset($_POST['kode_aset']) ? $_POST['kode_aset'] : '';
     $nomor_urut = isset($_POST['nomor_urut']) ? $_POST['nomor_urut'] : '';
 
@@ -25,9 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Ambil data lainnya dari form
-    $nama_barang = $_POST['nama_barang'];
     $departemen_id = $_POST['departemen_id'];
-    $lokasi = $_POST['lokasi'];
+    $gudang_id = $_POST['gudang_id'];
     $status = $_POST['status'];
     $tanggal_pembelian = $_POST['tanggal_pembelian'];
     $karyawan_id = $_POST['karyawan_id'];
@@ -47,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Query untuk menyimpan data ke database
-    $sql = "INSERT INTO aset (kode_aset, kode_lengkap, nama_barang, departemen_id, lokasi, status, tanggal_pembelian, karyawan_id) 
-            VALUES ('$kode_aset', '$kode_lengkap', '$nama_barang', '$departemen_id', '$lokasi', '$status', '$tanggal_pembelian', '$karyawan_id')";
+    $sql = "INSERT INTO aset (kode_aset, kode_lengkap, departemen_id, status, tanggal_pembelian, karyawan_id, gudang_id) 
+            VALUES ('$kode_aset', '$kode_lengkap', '$departemen_id', '$status', '$tanggal_pembelian', '$karyawan_id', '$gudang_id')";
 
     if ($koneksi->query($sql) === TRUE) {
         echo "<script>alert('Data aset berhasil ditambahkan!'); window.location.href='?page=aset';</script>";
@@ -60,7 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 
 
-<!-- Halaman Form Tambah Aset -->
 <!-- Halaman Form Tambah Aset -->
 <!-- Halaman Form Tambah Aset -->
 <div class="container-fluid">
@@ -161,11 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </script>
 
 
-                <!-- Input untuk Nama Aset -->
-                <div class="mb-3">
-                    <label for="nama_aset" class="form-label">Nama Aset</label>
-                    <input type="text" class="form-control" id="nama_aset" name="nama_aset" required>
-                </div>
+ 
 
                 <!-- Input untuk Departemen -->
                 <div class="mb-3">
@@ -176,6 +170,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $sql = $koneksi->query("SELECT * FROM departemen ORDER BY nama");
                         while ($data = $sql->fetch_assoc()) {
                             echo "<option value='" . $data['id'] . "'>" . htmlspecialchars($data['nama']) . "</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Input untuk Departemen -->
+                <div class="mb-3">
+                    <label for="gudang_id" class="form-label">Nama Barang</label>
+                    <select class="form-control select2" id="gudang_id" name="gudang_id" required>
+                        <option value="">Pilih Departemen</option>
+                        <?php
+                        $sql = $koneksi->query("SELECT * FROM gudang ORDER BY nama_barang");
+                        while ($data = $sql->fetch_assoc()) {
+                            echo "<option value='" . $data['id'] . "'>" . htmlspecialchars($data['nama_barang']) . "</option>";
                         }
                         ?>
                     </select>
@@ -196,11 +204,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </select>
                 </div>
 
-                <!-- Input untuk Lokasi -->
-                <div class="mb-3">
-                    <label for="lokasi" class="form-label">Lokasi</label>
-                    <input type="text" class="form-control" id="lokasi" name="lokasi" >
-                </div>
 
                 <!-- Input untuk Status -->
                 <div class="mb-3">

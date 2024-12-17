@@ -2,68 +2,57 @@
 // Koneksi ke database
 include('koneksibarang.php');
 
-// Ambil ID atau kode aset dari URL
-$id_aset = isset($_GET['id']) ? $_GET['id'] : '';
+// Mengecek apakah ID aset sudah disertakan dalam URL
+if (isset($_GET['id'])) {
+    $id_aset = $_GET['id'];
 
-// Jika tidak ada ID yang dikirim, kembali ke halaman aset
-if (!$id_aset) {
-    echo "<script>alert('ID aset tidak ditemukan!'); window.location.href='?page=aset';</script>";
-    exit;
-}
-
-// Ambil data aset berdasarkan ID
-$sql = $koneksi->query("SELECT * FROM aset WHERE id = '$id_aset'");
-$aset = $sql->fetch_assoc();
-
-if (!$aset) {
-    echo "<script>alert('Data aset tidak ditemukan!'); window.location.href='?page=aset';</script>";
-    exit;
+    // Ambil data aset berdasarkan ID
+    $sql = $koneksi->query("SELECT * FROM aset WHERE id = '$id_aset'");
+    if ($sql->num_rows > 0) {
+        $data_aset = $sql->fetch_assoc();
+    } else {
+        echo "<script>alert('Aset tidak ditemukan!'); window.location.href = '?page=aset';</script>";
+        exit;
+    }
 }
 
 // Mengecek apakah form sudah disubmit
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $kode_aset = isset($_POST['kode_aset']) ? $_POST['kode_aset'] : '';
-    $nomor_urut = isset($_POST['nomor_urut']) ? $_POST['nomor_urut'] : '';
-
-    if ($kode_aset && $nomor_urut) {
-        $nomor_urut = str_pad($nomor_urut, 4, '0', STR_PAD_LEFT);
-        $sql_jenis_barang = $koneksi->query("SELECT jenis_barang FROM jenis_barang WHERE code_barang = '$kode_aset'");
-        $data_jenis_barang = $sql_jenis_barang->fetch_assoc();
-        $jenis_barang = $data_jenis_barang['jenis_barang'];
-        $kode_lengkap = $kode_aset . '/' . $jenis_barang . '/' . $nomor_urut;
-    } else {
-        $kode_lengkap = '';
-    }
-
-    $nama_aset = $_POST['nama_aset'];
+    // Ambil data dari form
+    $kode_aset = $_POST['kode_aset'];
+    $nomor_urut = $_POST['nomor_urut'];
     $departemen_id = $_POST['departemen_id'];
-    $lokasi = $_POST['lokasi'];
+    $gudang_id = $_POST['gudang_id'];
     $status = $_POST['status'];
     $tanggal_pembelian = $_POST['tanggal_pembelian'];
     $karyawan_id = $_POST['karyawan_id'];
-    $kondisi = $_POST['kondisi'];
 
-    // Validasi karyawan_id
-    $karyawan_check = $koneksi->query("SELECT id FROM daftar_karyawan WHERE id = '$karyawan_id'");
-    if ($karyawan_check->num_rows == 0) {
-        echo "<script>alert('Karyawan dengan ID tersebut tidak ditemukan!'); window.location.href = '?page=ubah-aset&id=$id_aset';</script>";
-        exit;
-    }
+    // Format nomor urut dengan padding 4 digit
+    $nomor_urut = str_pad($nomor_urut, 4, '0', STR_PAD_LEFT);
 
-    // Mengecek apakah kode aset sudah ada (kecuali untuk aset ini sendiri)
-    $cek_kode_aset = $koneksi->query("SELECT * FROM aset WHERE kode_lengkap = '$kode_lengkap' AND id != '$id_aset'");
-    if ($cek_kode_aset->num_rows > 0) {
-        echo "<script>alert('Kode aset sudah ada, harap pilih nomor urut yang berbeda.'); window.location.href = '?page=ubah-aset&id=$id_aset';</script>";
-        exit;
-    }
+    // Ambil nama jenis barang untuk digunakan dalam kode lengkap
+    $sql_jenis_barang = $koneksi->query("SELECT jenis_barang FROM jenis_barang WHERE code_barang = '$kode_aset'");
+    $data_jenis_barang = $sql_jenis_barang->fetch_assoc();
+    $jenis_barang = $data_jenis_barang['jenis_barang'];
 
-    // Query untuk memperbarui data ke database
-    $sql = "UPDATE aset SET kode_aset='$kode_aset', kode_lengkap='$kode_lengkap', nama_aset='$nama_aset', departemen_id='$departemen_id', lokasi='$lokasi', status='$status', tanggal_pembelian='$tanggal_pembelian', karyawan_id='$karyawan_id', kondisi='$kondisi' WHERE id='$id_aset'";
+    // Gabungkan kode aset, jenis barang, dan nomor urut untuk membentuk kode lengkap
+    $kode_lengkap = $kode_aset . '/' . $jenis_barang . '/' . $nomor_urut;
 
-    if ($koneksi->query($sql) === TRUE) {
+    // Query untuk memperbarui data aset
+    $sql_update = "UPDATE aset SET
+        kode_aset = '$kode_aset',
+        kode_lengkap = '$kode_lengkap',
+        departemen_id = '$departemen_id',
+        status = '$status',
+        tanggal_pembelian = '$tanggal_pembelian',
+        karyawan_id = '$karyawan_id',
+        gudang_id = '$gudang_id'
+        WHERE id = '$id_aset'";
+
+    if ($koneksi->query($sql_update) === TRUE) {
         echo "<script>alert('Data aset berhasil diubah!'); window.location.href='?page=aset';</script>";
     } else {
-        echo "Error: " . $sql . "<br>" . $koneksi->error;
+        echo "Error: " . $sql_update . "<br>" . $koneksi->error;
     }
 }
 ?>
@@ -76,92 +65,123 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
         <div class="card-body">
             <form method="POST">
+                <!-- Input untuk Kode Aset -->
                 <div class="mb-3">
                     <label for="kode_aset" class="form-label">Kode Aset</label>
                     <select class="form-control" id="kode_aset" name="kode_aset" required>
                         <option value="">Pilih Kode Aset</option>
                         <?php
+                        // Ambil data Kode Aset dari tabel jenis_barang
                         $sql = $koneksi->query("SELECT * FROM jenis_barang");
                         while ($data = $sql->fetch_assoc()) {
-                            $selected = ($aset['kode_aset'] == $data['code_barang']) ? 'selected' : '';
+                            $selected = ($data['code_barang'] == $data_aset['kode_aset']) ? 'selected' : '';
                             echo "<option value='" . $data['code_barang'] . "' $selected>" . $data['code_barang'] . " - " . $data['jenis_barang'] . "</option>";
                         }
                         ?>
                     </select>
                 </div>
 
-                <div id="nomor_urut_container" class="mb-3">
+                <!-- Tempat untuk menampilkan input Nomor Urut -->
+                <div id="nomor_urut_container" class="mb-3" style="display:block;">
                     <label for="nomor_urut" class="form-label">Nomor Urut Kode Aset</label>
-                    <input type="number" class="form-control" id="nomor_urut" name="nomor_urut" value="<?php echo substr($aset['kode_lengkap'], -4); ?>" min="1" required>
+                    <input type="number" class="form-control" id="nomor_urut" name="nomor_urut" 
+                           placeholder="Masukkan Nomor Urut" min="1" required value="<?php echo substr($data_aset['kode_lengkap'], -4); ?>">
                 </div>
 
+                <!-- Tempat untuk menampilkan Kode Aset Lengkap -->
                 <div class="mb-3">
                     <label for="kode_lengkap" class="form-label">Kode Aset Lengkap</label>
-                    <input type="text" class="form-control" id="kode_lengkap" name="kode_lengkap" value="<?php echo htmlspecialchars($aset['kode_lengkap']); ?>" readonly>
+                    <input type="text" class="form-control" id="kode_lengkap" name="kode_lengkap" readonly
+                           value="<?php echo $data_aset['kode_lengkap']; ?>">
                 </div>
 
-                <div class="mb-3">
-                    <label for="nama_aset" class="form-label">Nama Aset</label>
-                    <input type="text" class="form-control" id="nama_aset" name="nama_aset" value="<?php echo htmlspecialchars($aset['nama_aset']); ?>" required>
-                </div>
+                <script>
+                    $(document).ready(function() {
+                        // Menangani perubahan pada input nomor urut
+                        document.getElementById('nomor_urut').addEventListener('input', function() {
+                            var kodeAset = document.getElementById('kode_aset').value;
+                            var nomorUrut = this.value;
+                            var kodeLengkap = document.getElementById('kode_lengkap');
 
+                            if (kodeAset && nomorUrut) {
+                                // Format nomor urut menjadi 4 digit (misalnya 0001, 0002, ...)
+                                var nomorUrutFormatted = nomorUrut.padStart(4, '0');
+                                kodeLengkap.value = kodeAset + "/" + nomorUrutFormatted;
+                            }
+                        });
+                    });
+                </script>
+
+                <!-- Input untuk Departemen -->
                 <div class="mb-3">
                     <label for="departemen_id" class="form-label">Departemen</label>
-                    <select class="form-control" id="departemen_id" name="departemen_id" required>
+                    <select class="form-control select2" id="departemen_id" name="departemen_id" required>
                         <option value="">Pilih Departemen</option>
                         <?php
                         $sql = $koneksi->query("SELECT * FROM departemen ORDER BY nama");
                         while ($data = $sql->fetch_assoc()) {
-                            $selected = ($aset['departemen_id'] == $data['id']) ? 'selected' : '';
+                            $selected = ($data['id'] == $data_aset['departemen_id']) ? 'selected' : '';
                             echo "<option value='" . $data['id'] . "' $selected>" . htmlspecialchars($data['nama']) . "</option>";
                         }
                         ?>
                     </select>
                 </div>
 
+                <!-- Input untuk Nama Barang -->
+                <div class="mb-3">
+                    <label for="gudang_id" class="form-label">Nama Barang</label>
+                    <select class="form-control select2" id="gudang_id" name="gudang_id" required>
+                        <option value="">Pilih Nama Barang</option>
+                        <?php
+                        $sql = $koneksi->query("SELECT * FROM gudang ORDER BY nama_barang");
+                        while ($data = $sql->fetch_assoc()) {
+                            $selected = ($data['id'] == $data_aset['gudang_id']) ? 'selected' : '';
+                            echo "<option value='" . $data['id'] . "' $selected>" . htmlspecialchars($data['nama_barang']) . "</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Input untuk Karyawan -->
                 <div class="mb-3">
                     <label for="karyawan_id" class="form-label">Karyawan</label>
-                    <select class="form-control" id="karyawan_id" name="karyawan_id" required>
+                    <select class="form-control select2" id="karyawan_id" name="karyawan_id" required>
                         <option value="">Pilih Karyawan</option>
                         <?php
+                        // Ambil data Karyawan dari tabel daftar_karyawan
                         $sql = $koneksi->query("SELECT * FROM daftar_karyawan");
                         while ($data = $sql->fetch_assoc()) {
-                            $selected = ($aset['karyawan_id'] == $data['id']) ? 'selected' : '';
+                            $selected = ($data['id'] == $data_aset['karyawan_id']) ? 'selected' : '';
                             echo "<option value='" . $data['id'] . "' $selected>" . htmlspecialchars($data['nama']) . "</option>";
                         }
                         ?>
                     </select>
                 </div>
 
-                <div class="mb-3">
-                    <label for="lokasi" class="form-label">Lokasi</label>
-                    <input type="text" class="form-control" id="lokasi" name="lokasi" value="<?php echo htmlspecialchars($aset['lokasi']); ?>" required>
-                </div>
-
+                <!-- Input untuk Status -->
                 <div class="mb-3">
                     <label for="status" class="form-label">Status</label>
                     <select id="status" name="status" class="form-control" required>
-                        <option value="Aktif" <?php echo ($aset['status'] == 'Aktif') ? 'selected' : ''; ?>>Aktif</option>
-                        <option value="Tidak Aktif" <?php echo ($aset['status'] == 'Tidak Aktif') ? 'selected' : ''; ?>>Tidak Aktif</option>
+                        <option value="Aktif" <?php echo ($data_aset['status'] == 'Aktif') ? 'selected' : ''; ?>>Aktif</option>
+                        <option value="Tidak Aktif" <?php echo ($data_aset['status'] == 'Tidak Aktif') ? 'selected' : ''; ?>>Tidak Aktif</option>
                     </select>
                 </div>
 
+                <!-- Input untuk Tanggal Pembelian -->
                 <div class="mb-3">
                     <label for="tanggal_pembelian" class="form-label">Tanggal Pembelian</label>
-                    <input type="date" class="form-control" id="tanggal_pembelian" name="tanggal_pembelian" value="<?php echo $aset['tanggal_pembelian']; ?>" required>
+                    <input type="date" class="form-control" id="tanggal_pembelian" name="tanggal_pembelian" required
+                           value="<?php echo $data_aset['tanggal_pembelian']; ?>">
                 </div>
 
+                <!-- Tombol Submit -->
                 <div class="mb-3">
-                    <label for="kondisi" class="form-label">Kondisi</label>
-                    <select id="kondisi" name="kondisi" class="form-control" required>
-                        <option value="Baik" <?php echo ($aset['kondisi'] == 'Baik') ? 'selected' : ''; ?>>Baik</option>
-                        <option value="Rusak" <?php echo ($aset['kondisi'] == 'Rusak') ? 'selected' : ''; ?>>Rusak</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                    <a href="?page=aset" class="btn btn-secondary">Kembali</a>
+                    <button type="submit" class="btn btn-primary custom-btn">
+                        <i class="fas fa-save me-2"></i> Simpan Perubahan
+                    </button>
+                    <a href="?page=aset" class="btn btn-secondary custom-btn">
+                        <i class="fas fa-arrow-left me-2"></i> Kembali
+                    </a>
                 </div>
             </form>
         </div>

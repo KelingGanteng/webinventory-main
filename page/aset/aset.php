@@ -43,11 +43,11 @@
                         <tr>
                             <th style="width: 50px; text-align: center;">No</th>
                             <th style="width: 150px; text-align: center;">Kode Aset</th>
+                            <th style="width: 150px; text-align: center;">Jenis Barang</th>
+                            <th style="width: 150px; text-align: center;">Nama Barang Aset</th>
                             <th style="width: 150px; text-align: center;">Departemen</th>
-                            <th style="width: 150px; text-align: center;">Nama Barang</th>
                             <th style="width: 100px; text-align: center;">Karyawan</th>
                             <th style="width: 100px; text-align: center;">Bagian</th>
-                            <th style="width: 200px; text-align: center;">Lokasi</th>
                             <th style="width: 100px; text-align: center;">Status</th>
                             <th style="width: 150px; text-align: center;">Tanggal Penyerahan</th>
                             <th style="width: 200px; text-align: center;">Pengaturan</th>
@@ -57,18 +57,18 @@
                         <?php
                         $no = 1;
                         $sql = $koneksi->query("
-                            SELECT aset.*, 
+                        SELECT aset.*, 
                                 daftar_karyawan.nama AS nama_karyawan, 
                                 daftar_karyawan.bagian, 
                                 departemen.nama AS nama_departemen, 
-                                jenis_barang.jenis_barang, 
-                                gudang.nama_barang
+                                jenis_barang.jenis_barang,
+                                gudang.nama_barang as gudang_id
                             FROM aset
                             LEFT JOIN daftar_karyawan ON aset.karyawan_id = daftar_karyawan.id
                             LEFT JOIN departemen ON aset.departemen_id = departemen.id
                             LEFT JOIN jenis_barang ON aset.jenis_barang_id = jenis_barang.id
-                            LEFT JOIN gudang ON aset.kode_barang = gudang.kode_barang
-                        ");
+                            LEFT JOIN gudang ON aset.gudang_id = gudang.id
+                        ") ;        
 
                     
                         if ($sql === false) {
@@ -79,11 +79,11 @@
                                 <tr>
                                     <td style="text-align: center;"><?php echo $no++; ?></td>
                                     <td style="text-align: center;"><?php echo $data['kode_lengkap'] ?></td>
+                                    <td style="text-align: center;"><?php echo $data['jenis_barang'] ?></td>
+                                    <td style="text-align: center;"><?php echo $data['gudang_id']; ?></td>
                                     <td style="text-align: center;"><?php echo $data['nama_departemen'] ?></td>
-                                    <td style="text-align: center;"><?php echo $data['nama_barang']; ?></td>
                                     <td style="text-align: center;"><?php echo $data['nama_karyawan'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['bagian'] ?></td>
-                                    <td style="text-align: center;"><?php echo $data['lokasi'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['status'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['tanggal_pembelian'] ?></td>
                                     <td style="text-align: center;">
