@@ -81,35 +81,32 @@
 
 
 
-						$cek = $koneksi->query("SELECT kode_barang FROM gudang WHERE kode_barang='$kode_barang'");
-						if ($cek->num_rows > 0) {
-							echo "<script>
-								alert('Kode barang sudah ada di gudang!');
-							</script>";
-						} else {
-							$sql = $koneksi->query("INSERT INTO gudang 
-								(kode_barang, nama_barang, jenis_barang, jumlah, satuan) 
-								VALUES 
-								('$kode_barang', '$nama_barang', '$jenis_barang', '$jumlah', '$satuan')");
+ // Cek apakah nama_barang sudah ada di gudang
+    $cek = $koneksi->query("SELECT nama_barang FROM gudang WHERE nama_barang='$nama_barang'");
+    if ($cek->num_rows > 0) {
+        echo "<script>
+            alert('Nama barang sudah ada di gudang!');
+        </script>";
+    } else {
+        // Simpan data barang ke gudang
+        $sql = $koneksi->query("INSERT INTO gudang 
+            (kode_barang, nama_barang, jenis_barang, jumlah, satuan) 
+            VALUES 
+            ('$kode_barang', '$nama_barang', '$jenis_barang', '$jumlah', '$satuan')");
 
-							if ($sql) {
-								echo "<script>
-									alert('Data Berhasil Disimpan');
-									window.location.href='?page=gudang';
-								</script>";
-							} else {
-								echo "<script>
-									alert('Gagal menyimpan data: " . $koneksi->error . "');
-								</script>";
-							}
-						}
-					}
-					?>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
+        if ($sql) {
+            echo "<script>
+                alert('Data Berhasil Disimpan');
+                window.location.href='?page=gudang';
+            </script>";
+        } else {
+            echo "<script>
+                alert('Gagal menyimpan data: " . $koneksi->error . "');
+            </script>";
+        }
+    }
+}
+?>
 
 <script>
 	document.getElementById('jenis_barang').addEventListener('change', function () {

@@ -4,7 +4,7 @@ include('koneksibarang.php');
 
 // Mengecek apakah form sudah disubmit
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Memeriksa apakah 'kode_aset' dan 'nomor_urut' ada dalam formjoi
+    // Memeriksa apakah 'kode_aset' dan 'nomor_urut' ada dalam form
     $kode_aset = isset($_POST['kode_aset']) ? $_POST['kode_aset'] : '';
     $nomor_urut = isset($_POST['nomor_urut']) ? $_POST['nomor_urut'] : '';
 
@@ -14,12 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $nomor_urut = str_pad($nomor_urut, 4, '0', STR_PAD_LEFT);
 
         // Ambil nama jenis barang untuk digunakan dalam kode lengkap
-        $sql_jenis_barang = $koneksi->query("SELECT jenis_barang FROM jenis_barang WHERE code_barang = '$kode_aset'");
-        $data_jenis_barang = $sql_jenis_barang->fetch_assoc();
-        $jenis_barang = $data_jenis_barang['jenis_barang'];
+        $gudang_id = $_POST['gudang_id']; // Ambil jenis barang dari form
 
         // Gabungkan kode aset, jenis barang, dan nomor urut untuk membentuk kode lengkap
-        $kode_lengkap = $kode_aset . '/' . $jenis_barang . '/' . $nomor_urut; // Format: CBA001/Laptop/0001
+        $kode_lengkap = $kode_aset . '/' . $gudang_id . '/' . $nomor_urut; // Format: CBA001/Laptop/0001
     } else {
         $kode_lengkap = ''; // Tidak ada kode lengkap jika tidak ada kode aset atau nomor urut
     }
@@ -30,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $status = $_POST['status'];
     $tanggal_pembelian = $_POST['tanggal_pembelian'];
     $karyawan_id = $_POST['karyawan_id'];
+
 
     // Validasi karyawan_id
     $karyawan_check = $koneksi->query("SELECT id FROM daftar_karyawan WHERE id = '$karyawan_id'");
@@ -57,9 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 ?>
 
-
-
-<!-- Halaman Form Tambah Aset -->
 <!-- Halaman Form Tambah Aset -->
 <div class="container-fluid">
     <div class="card shadow mb-4">
@@ -68,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
         <div class="card-body">
             <form method="POST">
-                <!-- Input untuk Kode Aset -->
                 <div class="mb-3">
                     <label for="kode_aset" class="form-label">Kode Aset</label>
                     <select class="form-control" id="kode_aset" name="kode_aset" required>
@@ -77,20 +72,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         // Ambil data Kode Aset dari tabel jenis_barang
                         $sql = $koneksi->query("SELECT * FROM jenis_barang");
                         while ($data = $sql->fetch_assoc()) {
-                            echo "<option value='" . $data['code_barang'] . "'>" . $data['code_barang'] . " - " . $data['jenis_barang'] . "</option>";
+                            echo "<option value='" . $data['code_barang'] . "'>" . $data['code_barang'] . ' '. $data['nama_barang']. "</option>";
                         }
                         ?>
                     </select>
                 </div>
+                
+                <!-- Input untuk Gudang -->
+                <div class="mb-3">
+                    <label for="gudang_id" class="form-label">Nama Barang</label>
+                    <select class="form-control select2" id="gudang_id" name="gudang_id" required>
+                        <option value="">Pilih Nama Barang</option>
+                        <?php
+                        $sql = $koneksi->query("SELECT * FROM gudang ORDER BY nama_barang");
+                        while ($data = $sql->fetch_assoc()) {
+                            echo "<option value='" . $data['id'] . "'>" . htmlspecialchars($data['nama_barang']) . "</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+                
+               
 
-                <!-- Tempat untuk menampilkan input Nomor Urut -->
-                <div id="nomor_urut_container" class="mb-3" style="display:none;">
-                    <label for="nomor_urut" class="form-label">Nomor Urut Kode Aset</label>
-                    <input type="number" class="form-control" id="nomor_urut" name="nomor_urut"
-                        placeholder="Masukkan Nomor Urut" min="1" required>
+                <div class="mb-3">
+                    <label for="nomor_urut" class="form-label">Nomor Urut</label>
+                    <input type="number" class="form-control" id="nomor_urut" name="nomor_urut" placeholder="Masukkan Nomor Urut" min="1" required>
                 </div>
 
-                <!-- Tempat untuk menampilkan Kode Aset Lengkap -->
                 <div class="mb-3">
                     <label for="kode_lengkap" class="form-label">Kode Aset Lengkap</label>
                     <input type="text" class="form-control" id="kode_lengkap" name="kode_lengkap" readonly>
@@ -98,68 +106,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <script>
                     $(document).ready(function() {
-                        // Inisialisasi Select2 pada dropdown kode_aset
-                        $('.select2').select2({
-                            placeholder: "Pilih Kode Aset", // Placeholder jika tidak ada pilihan
-                            width: '100%' // Memastikan lebar dropdown 100%
+                        // Ketika kode_aset dipilih
+                        $('#kode_aset').change(function() {
+                            updateKodeLengkap();
                         });
 
-                        // JavaScript untuk menampilkan input nomor urut ketika memilih kode aset
-                        document.getElementById('kode_aset').addEventListener('change', function() {
-                            var kodeAset = this.value;
-                            var nomorUrutContainer = document.getElementById('nomor_urut_container');
-                            var kodeLengkap = document.getElementById('kode_lengkap');
+                        // Ketika jenis_barang dipilih
+                        $('#gudang_id').change(function() {
+                            updateKodeLengkap();
+                        });
 
-                            if (kodeAset !== "") {
-                                // Tampilkan input nomor urut jika kode aset dipilih
-                                nomorUrutContainer.style.display = "block";
-                                kodeLengkap.value = kodeAset + "/"; // Set kode aset yang dipilih pada bagian kode lengkap
+                        // Ketika nomor_urut diinput
+                        $('#nomor_urut').on('input', function() {
+                            updateKodeLengkap();
+                        });
+
+                        function updateKodeLengkap() {
+                            var kodeAset = $('#kode_aset').val();
+                            var gudang = $('#gudang_id').val();
+                            var nomorUrut = $('#nomor_urut').val().padStart(4, '0'); // Format nomor urut dengan padding 4 digit
+
+                            // Jika ketiga input terisi
+                            if (kodeAset && gudang && nomorUrut) {
+                                var kodeLengkap = kodeAset + '/' + gudang + '/' + nomorUrut;
+                                $('#kode_lengkap').val(kodeLengkap); // Tampilkan kode lengkap
                             } else {
-                                // Sembunyikan input nomor urut jika tidak ada kode aset yang dipilih
-                                nomorUrutContainer.style.display = "none";
-                                kodeLengkap.value = "";
+                                $('#kode_lengkap').val(''); // Kosongkan kode lengkap jika input tidak lengkap
                             }
-                        });
-
-                        // Menangani perubahan pada input nomor urut
-                        document.getElementById('nomor_urut').addEventListener('input', function() {
-                            var kodeAset = document.getElementById('kode_aset').value;
-                            var nomorUrut = this.value;
-                            var kodeLengkap = document.getElementById('kode_lengkap');
-
-                            if (kodeAset && nomorUrut) {
-                                // Format nomor urut menjadi 4 digit (misalnya 0001, 0002, ...)
-                                var nomorUrutFormatted = nomorUrut.padStart(4, '0');
-                                kodeLengkap.value = kodeAset + "/" + nomorUrutFormatted;
-
-                                // Mengecek apakah kode lengkap sudah ada di database
-                                checkIfKodeAsetExists(kodeLengkap.value);
-                            }
-                        });
-
-                        // Fungsi untuk memeriksa apakah kode aset lengkap sudah ada di database
-                        function checkIfKodeAsetExists(kodeLengkap) {
-                            // Melakukan request ke server untuk memeriksa apakah kode lengkap sudah ada
-                            var xhr = new XMLHttpRequest();
-                            xhr.open("POST", "check_kode_aset.php", true);
-                            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                            xhr.onload = function() {
-                                if (xhr.status === 200) {
-                                    var response = xhr.responseText.trim();
-                                    if (response === "exists") {
-                                        alert("Kode Aset ini sudah ada. Silakan pilih nomor urut yang berbeda.");
-                                        document.getElementById('nomor_urut').value = ''; // Reset nomor urut
-                                        document.getElementById('kode_lengkap').value = kodeAset + "/";
-                                    }
-                                }
-                            };
-                            xhr.send("kode_lengkap=" + encodeURIComponent(kodeLengkap));
                         }
                     });
                 </script>
-
-
- 
 
                 <!-- Input untuk Departemen -->
                 <div class="mb-3">
@@ -175,19 +151,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </select>
                 </div>
 
-                <!-- Input untuk Departemen -->
-                <div class="mb-3">
-                    <label for="gudang_id" class="form-label">Nama Barang</label>
-                    <select class="form-control select2" id="gudang_id" name="gudang_id" required>
-                        <option value="">Pilih Departemen</option>
-                        <?php
-                        $sql = $koneksi->query("SELECT * FROM gudang ORDER BY nama_barang");
-                        while ($data = $sql->fetch_assoc()) {
-                            echo "<option value='" . $data['id'] . "'>" . htmlspecialchars($data['nama_barang']) . "</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
 
                 <!-- Input untuk Karyawan -->
                 <div class="mb-3">
@@ -204,7 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </select>
                 </div>
 
-
                 <!-- Input untuk Status -->
                 <div class="mb-3">
                     <label for="status" class="form-label">Status</label>
@@ -220,8 +182,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <input type="date" class="form-control" id="tanggal_pembelian" name="tanggal_pembelian" required>
                 </div>
 
-               
-
                 <!-- Tombol Submit -->
                 <div class="mb-3">
                     <button type="submit" class="btn btn-primary custom-btn">
@@ -236,7 +196,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 </div>
 
-<!-- CSS untuk Styling Form -->
 <style>
     .custom-btn {
         background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
@@ -251,16 +210,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
     }
 
-    .custom-btn:focus {
-        outline: none;
-        box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
-    }
-
     .form-control {
         border-radius: 0.375rem;
     }
 
-    /* Styling untuk form label */
     .form-label {
         font-weight: bold;
     }

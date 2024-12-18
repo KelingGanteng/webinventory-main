@@ -1,116 +1,185 @@
+<script>
+    function sum() {
+        var stok = document.getElementById('stok').value;
+        var jumlahmasuk = document.getElementById('jumlahmasuk').value;
+        var result = parseInt(stok) - parseInt(jumlahmasuk);
+        if (!isNaN(result)) {
+            document.getElementById('total').value = result;
+        }
+    }
+
+    $(document).ready(function () {
+        // Ketika barang dipilih
+        $('#cmb_barang').change(function () {
+            var tamp = $(this).val(); // Ambil nilai barang
+            $.ajax({
+                type: 'POST',
+                url: 'get_satuan1.php',
+                data: { tamp: tamp },  // Kirimkan kode barang untuk mengambil satuan
+                success: function (response) {
+                    // Masukkan response (HTML satuan) ke dalam div tampung
+                    $('.tampung1').html(response);
+                }
+            });
+        });
+    });
+</script>
+
 <?php
-// Cek apakah ada parameter ID di URL
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    
-    // Ambil data barang masuk berdasarkan ID
-    $sql = $koneksi->query("SELECT * FROM barang_masuk WHERE id = '$id'");
-    $data = $sql->fetch_assoc();
-    
-    if (!$data) {
-        echo "<script>alert('Data barang masuk tidak ditemukan!'); window.location='?page=barangmasuk';</script>";
-    }
+// Koneksi ke database
+$koneksi = new mysqli("localhost", "root", "", "webinventory");
+
+// Periksa apakah koneksi berhasil
+if ($koneksi->connect_error) {
+    die("Koneksi gagal: " . $koneksi->connect_error);
 }
 
-// Proses perubahan data barang masuk
-if (isset($_POST['submit'])) {
-    // Ambil data dari form
-    $aset_id = $_POST['aset_id'];
-    $tanggal_masuk = $_POST['tanggal_masuk'];
-    $jumlah = $_POST['jumlah'];
-    $harga = $_POST['harga'];
+// Ambil ID transaksi yang diteruskan melalui URL
+$id_transaksi = isset($_GET['id_transaksi']) ? $_GET['id_transaksi'] : '';
 
-    // Query untuk mengubah data barang masuk
-    $sql = $koneksi->query("UPDATE barang_masuk SET aset_id = '$aset_id', tanggal_masuk = '$tanggal_masuk', jumlah = '$jumlah', harga = '$harga' WHERE id = '$id'");
+// Ambil data transaksi berdasarkan ID
+$sql = $koneksi->query("SELECT * FROM barang_masuk WHERE id_transaksi = '$id_transaksi'");
+$data_transaksi = $sql->fetch_assoc();
 
-    // Cek apakah query berhasil
-    if ($sql) {
-        echo "<script>alert('Data barang masuk berhasil diubah!'); window.location='?page=barangmasuk';</script>";
-    } else {
-        echo "<script>alert('Terjadi kesalahan, data gagal diubah!');</script>";
-    }
+if (!$data_transaksi) {
+    echo "Data transaksi tidak ditemukan!";
+    exit;
 }
+
+// Ambil data barang
+$kode_barang = $data_transaksi['kode_barang'];
+$nama_barang = $data_transaksi['nama_barang'];
+$jumlah = $data_transaksi['jumlah'];
+$satuan = $data_transaksi['satuan'];
+$kondisi = explode(", ", $data_transaksi['kondisi']);  // Split kondisi jika lebih dari satu
 ?>
 
-<!-- Begin Page Content -->
 <div class="container-fluid">
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Ubah Barang Masuk</h6>
         </div>
         <div class="card-body">
-            <!-- Form untuk ubah barang masuk -->
-            <form method="POST" action="">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="aset_id" class="form-label">Aset</label>
-                            <select id="aset_id" name="aset_id" class="form-control" required>
-                                <option value="">Pilih Aset</option>
-                                <?php
-                                // Query untuk mengambil data aset
-                                $query_aset = $koneksi->query("SELECT id, nama_aset FROM aset");
-                                while ($data_aset = $query_aset->fetch_assoc()) {
-                                    $selected = ($data_aset['id'] == $data['aset_id']) ? 'selected' : '';
-                                    echo "<option value='{$data_aset['id']}' {$selected}>{$data_aset['nama_aset']}</option>";
-                                }
-                                ?>
-                            </select>
+            <div class="table-responsive">
+                <div class="body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <label for="">Id Transaksi</label>
+                        <div class="form-group">
+                            <div class="form-line">
+                                <input type="text" name="id_transaksi" class="form-control" id="id_transaksi"
+                                    value="<?php echo $data_transaksi['id_transaksi']; ?>" readonly />
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="tanggal_masuk" class="form-label">Tanggal Masuk</label>
-                            <input type="date" id="tanggal_masuk" name="tanggal_masuk" class="form-control" value="<?php echo $data['tanggal_masuk']; ?>" required>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="jumlah" class="form-label">Jumlah</label>
-                            <input type="number" id="jumlah" name="jumlah" class="form-control" value="<?php echo $data['jumlah']; ?>" required>
+                        <label for="">Tanggal Masuk</label>
+                        <div class="form-group">
+                            <div class="form-line">
+                                <input type="date" name="tanggal_masuk" class="form-control"
+                                    value="<?php echo $data_transaksi['tanggal']; ?>" />
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="harga" class="form-label">Harga</label>
-                            <input type="number" id="harga" name="harga" class="form-control" value="<?php echo $data['harga']; ?>" step="0.01" required>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Tombol Simpan -->
-                <button type="submit" name="submit" class="btn btn-primary custom-btn">
-                    <i class="fas fa-save me-2"></i> Simpan Perubahan
-                </button>
-                <a href="?page=barangmasuk" class="btn btn-secondary custom-btn">
-                    <i class="fas fa-arrow-left me-2"></i> Kembali
-                </a>
-            </form>
+                        <label for="">Barang</label>
+                        <div class="form-group">
+                            <div class="form-line">
+                                <select name="barang" id="cmb_barang" class="form-control">
+                                    <option value="">-- Pilih Barang --</option>
+                                    <?php
+                                    $sql = $koneksi->query("SELECT * FROM gudang ORDER BY kode_barang");
+                                    while ($row = $sql->fetch_assoc()) {
+                                        // Tandai barang yang sudah dipilih
+                                        $selected = ($row['kode_barang'] == $kode_barang) ? 'selected' : '';
+                                        echo "<option value='{$row['kode_barang']}.{$row['nama_barang']}' $selected>{$row['kode_barang']} | {$row['nama_barang']}</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            <div class="tampung1"></div>
+                        </div>
+
+                        <div class="tampung"></div>
+
+                        <label for="">Jumlah</label>
+                        <div class="form-group">
+                            <div class="form-line">
+                                <input type="number" name="jumlah" class="form-control" style="max-width: 70px;"
+                                    inputmode="numeric" min="0" step="1" value="<?php echo $jumlah; ?>" readonly />
+                            </div>
+                        </div>
+
+                        <label for="">Kondisi</label>
+                        <div class="form-group">
+                            <div class="form-line">
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="kondisi[]" value="Baik" <?php echo (in_array('Baik', $kondisi) ? 'checked' : ''); ?> /> Baik</label>
+                                    <label><input type="checkbox" name="kondisi[]" value="Rusak" <?php echo (in_array('Rusak', $kondisi) ? 'checked' : ''); ?> /> Rusak</label>
+                                    <label><input type="checkbox" name="kondisi[]" value="Bekas" <?php echo (in_array('Bekas', $kondisi) ? 'checked' : ''); ?> /> Bekas</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label for="jumlah">Total Stok</label>
+                        <div class="form-group">
+                            <div class="form-line">
+                                <input readonly="readonly" name="jumlah" id="jumlah" type="number" class="form-control"
+                                    value="<?php echo $jumlah; ?>" />
+                            </div>
+                        </div>
+
+                        <label for="satuan">Satuan Barang</label>
+                        <div class="form-group">
+                            <div class="form-line">
+                                <select name="satuan" id="satuan" class="form-control">
+                                    <option value="">-- Pilih Satuan --</option>
+                                    <?php
+                                    $sql_satuan = $koneksi->query("SELECT * FROM satuan ORDER BY satuan");
+                                    while ($data_satuan = $sql_satuan->fetch_assoc()) {
+                                        $selected = ($data_satuan['satuan'] == $satuan) ? 'selected' : '';
+                                        echo "<option value='" . $data_satuan['satuan'] . "' $selected>" . $data_satuan['satuan'] . "</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <input type="submit" name="simpan" value="Simpan" class="btn btn-primary">
+                    </form>
+
+                    <?php
+                    if (isset($_POST['simpan'])) {
+                        $id_transaksi = $_POST['id_transaksi'];
+                        $tanggal = $_POST['tanggal_masuk'];
+
+                        $barang = $_POST['barang'];
+                        $pecah_barang = explode(".", $barang);
+                        $kode_barang = $pecah_barang[0];
+                        $nama_barang = $pecah_barang[1];
+
+                        $jumlah = $_POST['jumlah'];
+                        $satuan = $_POST['satuan'];
+
+                        // Menangani kondisi yang dikirimkan sebagai array
+                        $kondisi = isset($_POST['kondisi']) ? implode(", ", $_POST['kondisi']) : '';
+
+                        // Update data barang masuk
+                        $sql = $koneksi->query("UPDATE barang_masuk SET 
+                            tanggal='$tanggal', kode_barang='$kode_barang', nama_barang='$nama_barang', jumlah='$jumlah', satuan='$satuan', kondisi='$kondisi' 
+                            WHERE id_transaksi='$id_transaksi'");
+
+                        if ($sql) {
+                            echo "<script type='text/javascript'>
+                                alert('Data Berhasil Diubah');
+                                window.location.href = '?page=barangmasuk';
+                            </script>";
+                        } else {
+                            echo "<script type='text/javascript'>
+                                alert('Data Gagal Diubah');
+                            </script>";
+                        }
+                    }
+                    ?>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-<!-- CSS untuk tombol -->
-<style>
-    /* Custom button styling */
-    .custom-btn {
-        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-        color: white;
-        border: none;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .custom-btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-    }
-
-    .custom-btn:focus {
-        outline: none;
-        box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
-    }
-</style>

@@ -50,7 +50,7 @@
 						<label for="">Kode Barang</label>
 						<div class="form-group">
 							<div class="form-line">
-								<input type="text" name="code_barang" class="form-control" disabled />
+								<input type="text" id="generated_code" class="form-control" disabled />
 								<small>(Kode barang akan dihasilkan otomatis)</small>
 							</div>
 						</div>
@@ -59,56 +59,63 @@
 					</form>
 
 					<?php
-					if (isset($_POST['simpan'])) {
-						$jenis_barang = $_POST['jenis_barang'];
-						$departemen_id = $_POST['departemen'];
-						$angka_romawi = $_POST['romawi'];
+						if (isset($_POST['simpan'])) {
+							$jenis_barang = $_POST['jenis_barang'];
+							$departemen_id = $_POST['departemen'];
+							$angka_romawi = $_POST['romawi'];
 
-						// Ambil nama departemen berdasarkan id
-						$query_departemen = $koneksi->query("SELECT nama FROM departemen WHERE id = '$departemen_id'");
+							// Ambil nama departemen berdasarkan id
+							$query_departemen = $koneksi->query("SELECT nama FROM departemen WHERE id = '$departemen_id'");
 
-						if ($query_departemen) {
-							$departemen = $query_departemen->fetch_assoc();
-							$departemen_kode = substr($departemen['nama'], 0, 2); // Ambil 2 huruf pertama dari nama departemen
-					
-							// Ambil nomor urut terakhir berdasarkan format yang sama
-							$query_last_code = $koneksi->query("SELECT MAX(SUBSTRING(code_barang, 10, 4)) AS last_code 
-                                            FROM jenis_barang 
-                                            WHERE code_barang LIKE 'SF/$departemen_kode/$angka_romawi/%'");
-
-							if ($query_last_code) {
-								$last_code_data = $query_last_code->fetch_assoc();
-								// Pastikan 'last_code' adalah integer
-								$last_code = $last_code_data['last_code'] ? (int) $last_code_data['last_code'] : 0;
-								// Format nomor urut baru 0001, 0002, dst
-					
-
+							if ($query_departemen && $query_departemen->num_rows > 0) {
+								$departemen = $query_departemen->fetch_assoc();
+								$departemen_kode = strtoupper(substr($departemen['nama'], 0, 2)); // Ambil 2 huruf pertama dari nama departemen
 								$new_code_barang = "SF/$departemen_kode/$angka_romawi";
 
-								// Insert data ke tabel jenis_barang
-								$sql = $koneksi->query("INSERT INTO jenis_barang (jenis_barang, code_barang) VALUES ('$jenis_barang', '$new_code_barang')");
+								// Periksa apakah jenis barang yang sama sudah ada
+								$query_check = $koneksi->query("SELECT * FROM jenis_barang WHERE jenis_barang = '$jenis_barang'");
 
-								if ($sql) {
-									?>
-									<script type="text/javascript">
-										alert("Data Berhasil Disimpan");
-										window.location.href = "?page=jenisbarang";
-									</script>
-									<?php
+								if ($query_check->num_rows == 0) {
+									// Insert data ke tabel jenis_barang
+									$sql = $koneksi->query("INSERT INTO jenis_barang (jenis_barang, code_barang) VALUES ('$jenis_barang', '$new_code_barang')");
+
+									if ($sql) {
+										?>
+										<script type="text/javascript">
+											alert("Data Berhasil Disimpan");
+											window.location.href = "?page=jenisbarang";
+										</script>
+										<?php
+									} else {
+										echo "Error: " . $koneksi->error;
+									}
 								} else {
-									echo "Error: " . $koneksi->error;
+									echo "Error: Jenis barang sudah ada. Tidak dapat duplikasi.";
 								}
 							} else {
-								echo "Error: " . $koneksi->error;
+								echo "Error: Data departemen tidak ditemukan.";
 							}
-						} else {
-							echo "Error: " . $koneksi->error;
 						}
-					}
 					?>
+
 
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+
+<script>
+	document.getElementById('departemen').addEventListener('change', generateCode);
+	document.getElementById('romawi').addEventListener('change', generateCode);
+
+	function generateCode() {
+		const departemen = document.getElementById('departemen');
+		const romawi = document.getElementById('romawi');
+		if (departemen && romawi) {
+			const departemenKode = departemen.options[departemen.selectedIndex].text.substring(0, 2).toUpperCase();
+			const romawiValue = romawi.value;
+			document.getElementById('generated_code').value = `SF/${departemenKode}/${romawiValue}`;
+		}
+	}
+</script>

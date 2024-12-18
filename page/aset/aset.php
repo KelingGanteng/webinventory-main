@@ -43,7 +43,6 @@
                         <tr>
                             <th style="width: 50px; text-align: center;">No</th>
                             <th style="width: 150px; text-align: center;">Kode Aset</th>
-                            <th style="width: 150px; text-align: center;">Jenis Barang</th>
                             <th style="width: 150px; text-align: center;">Nama Barang Aset</th>
                             <th style="width: 150px; text-align: center;">Departemen</th>
                             <th style="width: 100px; text-align: center;">Karyawan</th>
@@ -61,7 +60,7 @@
                                 daftar_karyawan.nama AS nama_karyawan, 
                                 daftar_karyawan.bagian, 
                                 departemen.nama AS nama_departemen, 
-                                jenis_barang.jenis_barang,
+                                jenis_barang.jenis_barang AS nama_jenis_barang,  
                                 gudang.nama_barang as gudang_id
                             FROM aset
                             LEFT JOIN daftar_karyawan ON aset.karyawan_id = daftar_karyawan.id
@@ -79,7 +78,6 @@
                                 <tr>
                                     <td style="text-align: center;"><?php echo $no++; ?></td>
                                     <td style="text-align: center;"><?php echo $data['kode_lengkap'] ?></td>
-                                    <td style="text-align: center;"><?php echo $data['jenis_barang'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['gudang_id']; ?></td>
                                     <td style="text-align: center;"><?php echo $data['nama_departemen'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['nama_karyawan'] ?></td>

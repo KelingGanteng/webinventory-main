@@ -1,143 +1,186 @@
-<?php
-// Proses Simpan Data Barang Masuk
-if (isset($_POST['simpan'])) {
-    $id_transaksi = $_POST['id_transaksi'];
-    $tanggal = $_POST['tanggal'];
-    $kode_barang = $_POST['kode_barang'];
-    $kondisi = $_POST['kondisi'];
-    $jumlah = $_POST['jumlah'];
+  
+   <script>
+ function sum() {
+	 var stok = document.getElementById('stok').value;
+	 var jumlahmasuk = document.getElementById('jumlahmasuk').value;
+	 var result = parseInt(stok) + parseInt(jumlahmasuk);
+	 if (!isNaN(result)) {
+		 document.getElementById('jumlah').value = result;
+	 }
+ }
+ </script>
+  
+  <?php 
 
-    // Ambil satuan dari tabel gudang berdasarkan kode_barang
-    $query_satuan = $koneksi->query("SELECT satuan, jumlah FROM gudang WHERE kode_barang = '$kode_barang'");
-    $data_satuan = $query_satuan->fetch_assoc();
+$koneksi = new mysqli("localhost","root","","webinventory");
+$no = mysqli_query($koneksi, "select id_transaksi from barang_masuk order by id_transaksi desc");
+$idtran = mysqli_fetch_array($no);
+$kode = $idtran['id_transaksi'];
 
-    if ($data_satuan) {
-        $satuan = $data_satuan['satuan'];
-        $stok_sekarang = $data_satuan['jumlah']; // Ambil stok barang saat ini di gudang
 
-        // Mulai Transaksi Simpan Data Barang Masuk
-        $query_insert = $koneksi->query("INSERT INTO barang_masuk (id_transaksi, tanggal, kode_barang, kondisi, jumlah, satuan) 
-                                         VALUES ('$id_transaksi', '$tanggal', '$kode_barang', '$kondisi', '$jumlah', '$satuan')");
+$urut = substr($kode, 8, 3);
+$tambah = (int) $urut + 1;
+$bulan = date("m");
+$tahun = date("y");
 
-        // Update stok barang di tabel gudang
-        if ($query_insert) {
-            $stok_baru = $stok_sekarang + $jumlah;
-            $query_update_gudang = $koneksi->query("UPDATE gudang SET jumlah = '$stok_baru' WHERE kode_barang = '$kode_barang'");
+if(strlen($tambah) == 1){
+	$format = "TRM-".$bulan.$tahun."00".$tambah;
+} else if(strlen($tambah) == 2){
+	$format = "TRM-".$bulan.$tahun."0".$tambah;
+	
+} else{
+	$format = "TRM-".$bulan.$tahun.$tambah;
 
-            if ($query_update_gudang) {
-                echo "<script>alert('Data berhasil ditambahkan dan stok gudang diperbarui'); window.location.href='?page=barangmasuk';</script>";
-            } else {
-                echo "<script>alert('Data berhasil ditambahkan, tetapi gagal memperbarui stok gudang');</script>";
-            }
-        } else {
-            echo "<script>alert('Data gagal ditambahkan');</script>";
-        }
-    } else {
-        echo "<script>alert('Kode Barang tidak ditemukan di gudang');</script>";
-    }
 }
+
+  
+  
+$tanggal_masuk = date("Y-m-d");
+
+
 ?>
+  
+  <div class="container-fluid">
+
+          <!-- DataTales Example -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Tambah Barang Masuk</h6>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+							
+							
+							<div class="body">
+							
+							<form method="POST" enctype="multipart/form-data">
+							
+							<label for="">Id Transaksi</label>
+                            <div class="form-group">
+                               <div class="form-line">
+                                 <input type="text" name="id_transaksi" class="form-control" id="id_transaksi" value="<?php echo $format; ?>" readonly /> 
+							</div>
+                            </div>
+							
+						
+							
+							<label for="">Tanggal Masuk</label>
+                            <div class="form-group">
+                               <div class="form-line">
+                                 <input type="date" name="tanggal_masuk" class="form-control" id="tanggal_masuk" value="<?php echo $tanggal_masuk; ?>" />
+							</div>
+                            </div>
+							
+					
+							<label for="">Barang</label>
+                            <div class="form-group">
+                               <div class="form-line">
+                                <select name="barang" id="cmb_barang" class="form-control" />
+								<option value="">-- Pilih Barang  --</option>
+								<?php
+								
+								$sql = $koneksi -> query("select * from gudang order by kode_barang");
+								while ($data=$sql->fetch_assoc()) {
+									echo "<option value='$data[kode_barang].$data[nama_barang]'>$data[kode_barang] | $data[nama_barang]</option>";
+								}
+								?>
+								
+								</select>
+                                     
+									 
+							</div>
+                            </div>
+							
+							<div class="tampung"></div>
+					
+							<label for="">Jumlah</label>
+                            <div class="form-group">
+                               <div class="form-line">
+                                <input type="text" name="jumlahmasuk" id="jumlahmasuk" onkeyup="sum()" class="form-control" />
+                                     
+									 
+							</div>
+                            </div>
+							
+							<label for="jumlah">Total Stok</label>
+                            <div class="form-group">
+                               <div class="form-line">
+                               <input readonly="readonly" name="jumlah" id="jumlah" type="number" class="form-control">
+                                     
+									 
+							</div>
+                            </div>
+							
+							<div class="tampung1"></div>
+					
+						
+						
+							
+							<input type="submit" name="simpan" value="Simpan" class="btn btn-primary">
+							
+							</form>
+							
+							
+							
+							<?php
+							
+							if (isset($_POST['simpan'])) {
+								$id_transaksi= $_POST['id_transaksi'];
+								$tanggal= $_POST['tanggal_masuk'];
+
+								$barang= $_POST['barang'];
+								$pecah_barang = explode(".", $barang);
+								$kode_barang = $pecah_barang[0];
+								$nama_barang = $pecah_barang[1];
+								
+								
+								
+								$jumlah= $_POST['jumlahmasuk'];
+
+			
+
+								
+								$satuan = $_POST['satuan'];
+								
+								
+								
+							
+								
+								$sql = $koneksi->query("insert into barang_masuk (id_transaksi, tanggal, kode_barang, nama_barang, jumlah, satuan,) values('$id_transaksi','$tanggal','$kode_barang','$nama_barang','$jumlah','$satuan')");
+								
+								
+
+					
 
 
-<!-- Form Tambah Barang Masuk -->
-<div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Tambah Barang Masuk</h6>
-        </div>
-        <div class="card-body">
-            <form method="POST">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="id_transaksi" class="form-label">ID Transaksi</label>
-                        <input type="text" name="id_transaksi" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="tanggal" class="form-label">Tanggal Masuk</label>
-                        <input type="date" name="tanggal" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                   <div class="col-md-6">
-                    <label for="kode_barang" class="form-label">Kode Barang</label>
-                    <select id="kode_barang" name="kode_barang" class="form-control" required>
-                        <option value="">Pilih Kode Barang</option>
-                        <?php
-                        $query_barang = $koneksi->query("SELECT kode_barang, nama_barang FROM gudang");
-                        while ($barang = $query_barang->fetch_assoc()) {
-                            echo "<option value='{$barang['kode_barang']}'>{$barang['kode_barang']}</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-
-                <div class="col-md-6">
-                    <label for="nama_barang" class="form-label">Nama Barang</label>
-                    <select id="nama_barang" name="nama_barang" class="form-control" required>
-                        <option value="">Pilih Nama Barang</option>
-                    </select>
-
-                    <script>
-                        $(document).ready(function () {
-                            $("#kode_barang").change(function () {
-                                var kode_barang = $(this).val(); // Ambil nilai kode_barang
-                                if (kode_barang !== "") {
-                                    $.ajax({
-                                        url: "get_nama_barang.php", // File PHP untuk mengambil data
-                                        method: "POST",
-                                        data: { kode_barang: kode_barang },
-                                        dataType: "json",
-                                        success: function (data) {
-                                            $("#nama_barang").empty();
-                                            $("#nama_barang").append("<option value=''>Pilih Nama Barang</option>");
-
-                                            $.each(data, function (key, value) {
-                                                $("#nama_barang").append("<option value='" + value.nama_barang + "'>" + value.nama_barang + "</option>");
-                                            });
-                                        },
-                                        error: function () {
-                                            alert("Gagal mengambil data nama barang.");
-                                        }
-                                    });
-                                } else {
-                                    $("#nama_barang").empty();
-                                    $("#nama_barang").append("<option value=''>Pilih Nama Barang</option>");
-                                }
-                            });
-                        });
-                    </script>
-
-                </div>
-
-                    <div class="col-md-6">
-                        <label for="kondisi" class="form-label">Kondisi</label>
-                        <select name="kondisi" class="form-control" required>
-                            <option value="">Pilih Kondisi</option>
-                            <option value="Baik">Baik</option>
-                            <option value="Rusak">Rusak</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="jumlah" class="form-label">Jumlah Masuk</label>
-                        <input type="number" name="jumlah" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col">
-                        <button type="submit" name="simpan" class="btn btn-success">
-                            <i class="fas fa-save"></i> Simpan
-                        </button>
-                        <a href="?page=barangmasuk" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Batal
-                        </a>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+									
+									if ($sql) {
+									?>
+									<script type="text/javascript">
+										alert("Simpan Data Berhasil");
+										window.location.href="?page=barangmasuk";
+										
+										</script>
+										<?php
+								}
+							}
+							
+							
+							?>
+										
+								
+										
+										
+								
+										
+								
+								
+								
+							
+									
+							
+								
+								
+								
+								
+								
