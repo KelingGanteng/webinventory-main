@@ -105,37 +105,59 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
 
                 <script>
-                    $(document).ready(function() {
-                        // Ketika kode_aset dipilih
-                        $('#kode_aset').change(function() {
-                            updateKodeLengkap();
-                        });
+$(document).ready(function() {
+    // Ketika kode_aset dipilih
+    $('#kode_aset').change(function() {
+        var kodeAset = $(this).val();
+        
+        // Reset dan disable dropdown nama barang
+        $('#gudang_id').empty().append('<option value="">Pilih Nama Barang</option>');
+        
+        if(kodeAset) {
+            // Ajax call untuk mengambil data nama barang sesuai kode
+            $.ajax({
+                url: 'page/aset/get_filtered_items.php',
+                type: 'POST',
+                data: {kode_aset: kodeAset},
+                success: function(response) {
+                    $('#gudang_id').html(response);
+                    updateKodeLengkap();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                }
+            });
+        }
+    });
 
-                        // Ketika jenis_barang dipilih
-                        $('#gudang_id').change(function() {
-                            updateKodeLengkap();
-                        });
+    // Fungsi lainnya tetap sama
+    $('#gudang_id').change(updateKodeLengkap);
+    $('#nomor_urut').on('input', updateKodeLengkap);
 
-                        // Ketika nomor_urut diinput
-                        $('#nomor_urut').on('input', function() {
-                            updateKodeLengkap();
-                        });
+    function updateKodeLengkap() {
+        var kodeAset = $('#kode_aset').val();
+        var gudangText = $('#gudang_id option:selected').text();
+        var nomorUrut = $('#nomor_urut').val();
 
-                        function updateKodeLengkap() {
-                            var kodeAset = $('#kode_aset').val();
-                            var gudang = $('#gudang_id').val();
-                            var nomorUrut = $('#nomor_urut').val().padStart(4, '0'); // Format nomor urut dengan padding 4 digit
+        if (nomorUrut) {
+            nomorUrut = nomorUrut.toString().padStart(4, '0');
+        }
 
-                            // Jika ketiga input terisi
-                            if (kodeAset && gudang && nomorUrut) {
-                                var kodeLengkap = kodeAset + '/' + gudang + '/' + nomorUrut;
-                                $('#kode_lengkap').val(kodeLengkap); // Tampilkan kode lengkap
-                            } else {
-                                $('#kode_lengkap').val(''); // Kosongkan kode lengkap jika input tidak lengkap
-                            }
-                        }
-                    });
-                </script>
+        if (kodeAset && gudangText && nomorUrut) {
+            var kodeLengkap = kodeAset + '/' + gudangText + '/' + nomorUrut;
+            $('#kode_lengkap').val(kodeLengkap);
+        } else {
+            $('#kode_lengkap').val('');
+        }
+    }
+
+    // Inisialisasi Select2
+    $('.select2').select2({
+        width: '100%',
+        placeholder: 'Pilih opsi'
+    });
+});
+</script>
 
                 <!-- Input untuk Departemen -->
                 <div class="mb-3">
