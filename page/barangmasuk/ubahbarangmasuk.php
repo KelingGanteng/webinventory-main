@@ -1,3 +1,94 @@
+<?php
+// Koneksi ke database
+$koneksi = new mysqli("localhost", "root", "", "webinventory");
+
+// Periksa apakah koneksi berhasil
+if ($koneksi->connect_error) {
+    die("Koneksi gagal: " . $koneksi->connect_error);
+}
+
+// Periksa apakah ada ID yang dikirim
+if (isset($_GET['id'])) {
+    $id = (int)$_GET['id'];
+    
+    // Ambil data transaksi
+    $sql = "SELECT * FROM barang_masuk WHERE id = ?";
+    $stmt = $koneksi->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $data_transaksi = $result->fetch_assoc();
+        
+        // Ambil data barang
+        $kode_barang = $data_transaksi['kode_barang'];
+        $nama_barang = $data_transaksi['nama_barang'];
+        $jumlah = $data_transaksi['jumlah'];
+        $satuan = $data_transaksi['satuan'];
+    } else {
+        echo "<script>
+            alert('Data transaksi tidak ditemukan!');
+            window.location.href='?page=barangmasuk';
+        </script>";
+        exit;
+    }
+} else {
+    echo "<script>
+        alert('ID tidak valid!');
+        window.location.href='?page=barangmasuk';
+    </script>";
+    exit;
+}
+
+// Proses simpan perubahan
+if (isset($_POST['simpan'])) {
+    try {
+        $koneksi->begin_transaction();
+
+        $id = (int)$_GET['id'];
+        $jumlah_baru = (int)$_POST['jumlah'];
+        
+        // Ambil data barang masuk yang lama
+        $sql_old = "SELECT jumlah FROM barang_masuk WHERE id = ?";
+        $stmt_old = $koneksi->prepare($sql_old);
+        $stmt_old->bind_param("i", $id);
+        $stmt_old->execute();
+        $result_old = $stmt_old->get_result();
+        $data_old = $result_old->fetch_assoc();
+        $jumlah_lama = (int)$data_old['jumlah'];
+
+        // Update stok di gudang
+        $selisih = $jumlah_baru - $jumlah_lama;
+        $sql_update_gudang = "UPDATE gudang 
+                             SET jumlah = CAST(jumlah AS SIGNED) + ? 
+                             WHERE kode_barang = ?";
+        $stmt_gudang = $koneksi->prepare($sql_update_gudang);
+        $stmt_gudang->bind_param("is", $selisih, $kode_barang);
+        $stmt_gudang->execute();
+
+        // Update data barang masuk
+        $sql_update = "UPDATE barang_masuk 
+                       SET jumlah = ? 
+                       WHERE id = ?";
+        $stmt_update = $koneksi->prepare($sql_update);
+        $stmt_update->bind_param("ii", $jumlah_baru, $id);
+        $stmt_update->execute();
+
+        $koneksi->commit();
+        echo "<script>
+            alert('Data berhasil diubah!');
+            window.location.href='?page=barangmasuk';
+        </script>";
+    } catch (Exception $e) {
+        $koneksi->rollback();
+        echo "<script>
+            alert('Error: " . addslashes($e->getMessage()) . "');
+        </script>";
+    }
+}
+?>
+
 <script>
     function sum() {
         var stok = document.getElementById('stok').value;
@@ -15,140 +106,51 @@
             $.ajax({
                 type: 'POST',
                 url: 'get_satuan1.php',
-                data: { tamp: tamp },  // Kirimkan kode barang untuk mengambil satuan
+                data: { tamp: tamp },
                 success: function (response) {
-                    // Masukkan response (HTML satuan) ke dalam div tampung
                     $('.tampung1').html(response);
                 }
             });
         });
     });
 </script>
-
-<?php
-// Koneksi ke database
-$koneksi = new mysqli("localhost", "root", "", "webinventory");
-
-// Periksa apakah koneksi berhasil
-if ($koneksi->connect_error) {
-    die("Koneksi gagal: " . $koneksi->connect_error);
-}
-
-
-
-// Ambil data barang
-$kode_barang = $data_transaksi['kode_barang'];
-$nama_barang = $data_transaksi['nama_barang'];
-$jumlah = $data_transaksi['jumlah'];
-$satuan = $data_transaksi['satuan'];
-?>
-
 <div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Ubah Barang Masuk</h6>
-        </div>
+
+	<!-- DataTales Example -->
+	<div class="card shadow mb-4">
+		<div class="card-header py-3">
+			<h6 class="m-0 font-weight-bold text-primary">Tambah Barang Masuk</h6>
+		</div>
+		<div class="card-body">
+			<div class="table-responsive">
 
 
-                        <label for="">Tanggal Masuk</label>
-                        <div class="form-group">
-                            <div class="form-line">
-                                <input type="date" name="tanggal_masuk" class="form-control"
-                                    value="<?php echo $data_transaksi['tanggal']; ?>" />
-                            </div>
-                        </div>
+				<div class="body">
 
-                        <label for="">Barang</label>
-                        <div class="form-group">
-                            <div class="form-line">
-                                <select name="barang" id="cmb_barang" class="form-control">
-                                    <option value="">-- Pilih Barang --</option>
-                                    <?php
-                                    $sql = $koneksi->query("SELECT * FROM gudang ORDER BY kode_barang");
-                                    while ($row = $sql->fetch_assoc()) {
-                                        // Tandai barang yang sudah dipilih
-                                        $selected = ($row['kode_barang'] == $kode_barang) ? 'selected' : '';
-                                        echo "<option value='{$row['kode_barang']}.{$row['nama_barang']}' $selected>{$row['kode_barang']} | {$row['nama_barang']}</option>";
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                            <div class="tampung1"></div>
-                        </div>
-
-                        <div class="tampung"></div>
-
-                        <label for="">Jumlah</label>
-                        <div class="form-group">
-                            <div class="form-line">
-                                <input type="number" name="jumlah" class="form-control" style="max-width: 70px;"
-                                    inputmode="numeric" min="0" step="1" value="<?php echo $jumlah; ?>" readonly />
-                            </div>
-                        </div>
-
-
-
-                        <label for="jumlah">Total Stok</label>
-                        <div class="form-group">
-                            <div class="form-line">
-                                <input readonly="readonly" name="jumlah" id="jumlah" type="number" class="form-control"
-                                    value="<?php echo $jumlah; ?>" />
-                            </div>
-                        </div>
-
-                        <label for="satuan">Satuan Barang</label>
-                        <div class="form-group">
-                            <div class="form-line">
-                                <select name="satuan" id="satuan" class="form-control">
-                                    <option value="">-- Pilih Satuan --</option>
-                                    <?php
-                                    $sql_satuan = $koneksi->query("SELECT * FROM satuan ORDER BY satuan");
-                                    while ($data_satuan = $sql_satuan->fetch_assoc()) {
-                                        $selected = ($data_satuan['satuan'] == $satuan) ? 'selected' : '';
-                                        echo "<option value='" . $data_satuan['satuan'] . "' $selected>" . $data_satuan['satuan'] . "</option>";
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                        </div>
-
-                        <input type="submit" name="simpan" value="Simpan" class="btn btn-primary">
-                    </form>
-
-                    <?php
-                    if (isset($_POST['simpan'])) {
-                        $tanggal = $_POST['tanggal_masuk'];
-
-                        $barang = $_POST['barang'];
-                        $pecah_barang = explode(".", $barang);
-                        $kode_barang = $pecah_barang[0];
-                        $nama_barang = $pecah_barang[1];
-
-                        $jumlah = $_POST['jumlah'];
-                        $satuan = $_POST['satuan'];
-
-                        // Menangani kondisi yang dikirimkan sebagai array
-                        $kondisi = isset($_POST['kondisi']) ? implode(", ", $_POST['kondisi']) : '';
-
-                        // Update data barang masuk
-                        $sql = $koneksi->query("UPDATE barang_masuk SET 
-                            tanggal='$tanggal', kode_barang='$kode_barang', nama_barang='$nama_barang', jumlah='$jumlah', satuan='$satuan', kondisi='$kondisi' 
-                            WHERE id='$id'");
-
-                        if ($sql) {
-                            echo "<script type='text/javascript'>
-                                alert('Data Berhasil Diubah');
-                                window.location.href = '?page=barangmasuk';
-                            </script>";
-                        } else {
-                            echo "<script type='text/javascript'>
-                                alert('Data Gagal Diubah');
-                            </script>";
-                        }
-                    }
-                    ?>
-                </div>
-            </div>
-        </div>
-    </div>
+					<form method="POST" enctype="multipart/form-data">
+<!-- Form Edit -->
+<div class="form-group">
+    <label>Kode Barang</label>
+    <input type="text" class="form-control" name="kode_barang" value="<?php echo $kode_barang; ?>" readonly>
 </div>
+
+<div class="form-group">
+    <label>Nama Barang</label>
+    <input type="text" class="form-control" name="nama_barang" value="<?php echo $nama_barang; ?>" readonly>
+</div>
+
+<div class="form-group">
+    <label>Jumlah</label>
+    <input type="number" class="form-control" name="jumlah" id="jumlahmasuk" 
+           value="<?php echo $jumlah; ?>" onkeyup="sum();">
+</div>
+
+<div class="form-group">
+    <label>Satuan</label>
+    <input type="text" class="form-control" name="satuan" value="<?php echo $satuan; ?>" readonly>
+</div>
+
+<button type="submit" name="simpan" class="btn btn-primary">
+        <i class="fa fa-save"></i> Simpan
+    </button>
+</form>

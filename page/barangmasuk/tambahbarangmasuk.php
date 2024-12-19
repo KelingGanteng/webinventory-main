@@ -6,9 +6,11 @@ $(document).ready(function() {
 		var selectedOption = $(this).find('option:selected');
         var kode_barang = selectedOption.data('kode');
         var stok = selectedOption.data('stok');
+        var satuan = selectedOption.data('satuan');
         
         $('#kode_barang').val(kode_barang);
         $('#stok').val(stok);
+        $('#satuan').val(satuan);
         updateTotalStok();
 
 		$('#cmb_barang').select2({
@@ -78,7 +80,6 @@ $tanggal_masuk = date("Y-m-d");
 								<select name="barang" id="cmb_barang" class="form-control select2" onchange="updateTotalStok()">
 									<option value="">-- Pilih Barang --</option>
 									<?php
-									// Query sesuai dengan struktur tabel
 									$sql = $koneksi->query("SELECT id, kode_barang, nama_barang, jumlah 
 														FROM gudang 
 														WHERE nama_barang IS NOT NULL 
@@ -135,7 +136,21 @@ $tanggal_masuk = date("Y-m-d");
 						<input type="text" id="kode_barang" name="kode_barang" class="form-control" readonly />
 					</div>
 
-
+					<label for="satuan">Satuan</label>
+					<div class="form-group">
+						<div class="form-line">
+							<select name="satuan" id="satuan" class="form-control" required>
+								<option value="">-- Pilih Satuan --</option>
+								<?php
+								$sql_satuan = $koneksi->query("SELECT DISTINCT satuan FROM gudang ORDER BY satuan");
+								while ($data_satuan = $sql_satuan->fetch_assoc()) {
+									echo "<option value='" . htmlspecialchars($data_satuan['satuan']) . "'>" . 
+										htmlspecialchars($data_satuan['satuan']) . "</option>";
+								}
+								?>
+							</select>
+						</div>
+					</div>
 
 
 
@@ -181,7 +196,7 @@ $tanggal_masuk = date("Y-m-d");
 							$satuan = $_POST['satuan'];
 
 							// Ambil data barang berdasarkan ID
-							$get_barang = $koneksi->query("SELECT kode_barang, nama_barang, jumlah 
+							$get_barang = $koneksi->query("SELECT kode_barang, nama_barang, jumlah, satuan 
 														FROM gudang 
 														WHERE id = $barang_id");
 							
@@ -258,3 +273,100 @@ $tanggal_masuk = date("Y-m-d");
 		$stok_gudang = 0; // Default stok 0 jika barang belum dipilih
 	}
 	?>
+
+
+<style>
+  /* Custom button styling */
+  .custom-btn {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .custom-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .custom-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
+  }
+
+  /* DataTable buttons styling */
+  .dt-buttons .btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    font-size: 0.875rem;
+    padding: 5px 10px;
+    margin: 0 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .dt-buttons .btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .dt-buttons .btn i {
+    margin-right: 5px;
+  }
+
+  /* Table styling */
+  .table th,
+  .table td {
+    padding: 12px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Column width */
+  .table th:nth-child(1),
+  .table td:nth-child(1) {
+    width: 50px;
+  }
+
+  .table th:nth-child(2),
+  .table td:nth-child(2) {
+    width: 200px;
+  }
+
+  .table th:nth-child(3),
+  .table td:nth-child(3) {
+    width: 150px;
+  }
+
+  .table th:nth-child(4),
+  .table td:nth-child(4) {
+    width: 120px;
+  }
+
+  /* Table header styling */
+  .table thead th {
+    background-color: #f8f9fc;
+    font-weight: bold;
+  }
+
+  /* Pagination button styling */
+  .dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 5px 10px;
+    margin: 2px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+  }
+
+  .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color: #0056b3;
+  }
+
+  .dataTables_wrapper .dataTables_info {
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+</style>

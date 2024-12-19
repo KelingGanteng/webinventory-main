@@ -1,17 +1,16 @@
 <?php
 $koneksi = new mysqli("localhost", "root", "", "webinventory");
 
-if (isset($_GET['id_transaksi'])) {
+if (isset($_GET['id'])) { // Ubah dari id_transaksi menjadi id
     try {
-        // Mulai transaksi
         $koneksi->begin_transaction();
 
-        $id_transaksi = (int)$_GET['id_transaksi'];
+        $id = (int)$_GET['id']; // Ubah nama variabel
 
         // Ambil data barang masuk sebelum dihapus
         $sql_select = "SELECT kode_barang, jumlah FROM barang_masuk WHERE id = ?";
         $stmt_select = $koneksi->prepare($sql_select);
-        $stmt_select->bind_param("i", $id_transaksi);
+        $stmt_select->bind_param("i", $id); // Gunakan variabel id yang baru
         $stmt_select->execute();
         $result = $stmt_select->get_result();
         $data_barang = $result->fetch_assoc();
@@ -32,12 +31,10 @@ if (isset($_GET['id_transaksi'])) {
             // Hapus data barang masuk
             $sql_delete = "DELETE FROM barang_masuk WHERE id = ?";
             $stmt_delete = $koneksi->prepare($sql_delete);
-            $stmt_delete->bind_param("i", $id_transaksi);
+            $stmt_delete->bind_param("i", $id); // Gunakan variabel id yang baru
             $stmt_delete->execute();
 
-            // Commit transaksi
             $koneksi->commit();
-
             echo "<script>
                 alert('Data Barang Masuk berhasil dihapus!');
                 window.location.href='?page=barangmasuk';
@@ -47,7 +44,6 @@ if (isset($_GET['id_transaksi'])) {
         }
 
     } catch (Exception $e) {
-        // Rollback jika terjadi error
         $koneksi->rollback();
         echo "<script>
             alert('Error: " . addslashes($e->getMessage()) . "');
@@ -56,7 +52,7 @@ if (isset($_GET['id_transaksi'])) {
     }
 } else {
     echo "<script>
-        alert('ID transaksi tidak valid!');
+        alert('ID tidak valid!');
         window.location.href='?page=barangmasuk';
     </script>";
 }

@@ -52,14 +52,11 @@
                                 <td style="text-align: center;"><?php echo $data['jumlah'] ?></td>
                                 <td style="text-align: center;"><?php echo $data['satuan'] ?></td>
                                 <td style="text-align: center;">
-                                    <a href="?page=barangmasuk&aksi=ubahbarangmasuk&id_transaksi=<?php echo $data['id']; ?>"
+                                    <a href="?page=barangmasuk&aksi=ubahbarangmasuk&id=<?php echo $data['id']; ?>"
                                         class="btn btn-info btn-sm custom-btn">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <a href="?page=barangmasuk&aksi=hapusbarangmasuk&id_transaksi=<?php echo $data['id']; ?>"
-                                        class="btn btn-danger btn-sm custom-btn"
-                                        onclick="return confirm('Apakah anda yakin akan menghapus data ini?')">
-                                        <i class="fas fa-trash"></i> Hapus
+
                                     </a>
 
                                 </td>
