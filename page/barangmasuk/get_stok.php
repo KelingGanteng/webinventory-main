@@ -1,24 +1,24 @@
 <?php
-// Koneksi ke database
 $koneksi = new mysqli("localhost", "root", "", "webinventory");
 
-// Periksa apakah koneksi berhasil
 if ($koneksi->connect_error) {
     die("Koneksi gagal: " . $koneksi->connect_error);
 }
 
-// Ambil kode barang dari parameter POST
-$kode_barang = $_POST['kode_barang'];
-
-// Query untuk mengambil stok barang berdasarkan kode barang
-$sql = $koneksi->query("SELECT jumlah FROM gudang WHERE kode_barang = '$kode_barang'");
-
-// Cek apakah data ditemukan
-if ($sql->num_rows > 0) {
-    $data = $sql->fetch_assoc();
-    echo $data['jumlah']; // Mengembalikan jumlah stok barang
-} else {
-    echo 0; // Jika tidak ditemukan, kembalikan stok 0
+if(isset($_POST['id_barang'])) {
+    $id_barang = $_POST['id_barang'];
+    
+    $stmt = $koneksi->prepare("SELECT jumlah FROM gudang WHERE id = ? LIMIT 1");
+    $stmt->bind_param("i", $id_barang);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if($result && $result->num_rows > 0) {
+        $data = $result->fetch_assoc();
+        echo json_encode($data);
+    } else {
+        echo json_encode(['jumlah' => 0]);
+    }
 }
 
 $koneksi->close();

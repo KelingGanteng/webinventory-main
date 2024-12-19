@@ -8,7 +8,6 @@ $sql = "SELECT *
     where kode_barang = '$kode_bar'";
 $result = mysqli_query($koneksi, $sql);
 if (mysqli_num_rows($result) > 0) {
-  // output data of each row
   while ($row = mysqli_fetch_assoc($result)) {
 
     ?>
