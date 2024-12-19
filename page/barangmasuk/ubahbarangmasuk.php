@@ -34,24 +34,13 @@ if ($koneksi->connect_error) {
     die("Koneksi gagal: " . $koneksi->connect_error);
 }
 
-// Ambil ID transaksi yang diteruskan melalui URL
-$id_transaksi = isset($_GET['id_transaksi']) ? $_GET['id_transaksi'] : '';
 
-// Ambil data transaksi berdasarkan ID
-$sql = $koneksi->query("SELECT * FROM barang_masuk WHERE id_transaksi = '$id_transaksi'");
-$data_transaksi = $sql->fetch_assoc();
-
-if (!$data_transaksi) {
-    echo "Data transaksi tidak ditemukan!";
-    exit;
-}
 
 // Ambil data barang
 $kode_barang = $data_transaksi['kode_barang'];
 $nama_barang = $data_transaksi['nama_barang'];
 $jumlah = $data_transaksi['jumlah'];
 $satuan = $data_transaksi['satuan'];
-$kondisi = explode(", ", $data_transaksi['kondisi']);  // Split kondisi jika lebih dari satu
 ?>
 
 <div class="container-fluid">
@@ -59,17 +48,7 @@ $kondisi = explode(", ", $data_transaksi['kondisi']);  // Split kondisi jika leb
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Ubah Barang Masuk</h6>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <div class="body">
-                    <form method="POST" enctype="multipart/form-data">
-                        <label for="">Id Transaksi</label>
-                        <div class="form-group">
-                            <div class="form-line">
-                                <input type="text" name="id_transaksi" class="form-control" id="id_transaksi"
-                                    value="<?php echo $data_transaksi['id_transaksi']; ?>" readonly />
-                            </div>
-                        </div>
+
 
                         <label for="">Tanggal Masuk</label>
                         <div class="form-group">
@@ -107,16 +86,7 @@ $kondisi = explode(", ", $data_transaksi['kondisi']);  // Split kondisi jika leb
                             </div>
                         </div>
 
-                        <label for="">Kondisi</label>
-                        <div class="form-group">
-                            <div class="form-line">
-                                <div class="checkbox-group">
-                                    <label><input type="checkbox" name="kondisi[]" value="Baik" <?php echo (in_array('Baik', $kondisi) ? 'checked' : ''); ?> /> Baik</label>
-                                    <label><input type="checkbox" name="kondisi[]" value="Rusak" <?php echo (in_array('Rusak', $kondisi) ? 'checked' : ''); ?> /> Rusak</label>
-                                    <label><input type="checkbox" name="kondisi[]" value="Bekas" <?php echo (in_array('Bekas', $kondisi) ? 'checked' : ''); ?> /> Bekas</label>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <label for="jumlah">Total Stok</label>
                         <div class="form-group">
@@ -147,7 +117,6 @@ $kondisi = explode(", ", $data_transaksi['kondisi']);  // Split kondisi jika leb
 
                     <?php
                     if (isset($_POST['simpan'])) {
-                        $id_transaksi = $_POST['id_transaksi'];
                         $tanggal = $_POST['tanggal_masuk'];
 
                         $barang = $_POST['barang'];
@@ -164,7 +133,7 @@ $kondisi = explode(", ", $data_transaksi['kondisi']);  // Split kondisi jika leb
                         // Update data barang masuk
                         $sql = $koneksi->query("UPDATE barang_masuk SET 
                             tanggal='$tanggal', kode_barang='$kode_barang', nama_barang='$nama_barang', jumlah='$jumlah', satuan='$satuan', kondisi='$kondisi' 
-                            WHERE id_transaksi='$id_transaksi'");
+                            WHERE id='$id'");
 
                         if ($sql) {
                             echo "<script type='text/javascript'>

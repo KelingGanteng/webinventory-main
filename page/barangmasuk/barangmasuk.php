@@ -33,7 +33,6 @@
                             <th style="width: 150px; text-align: center;">Tanggal Masuk</th>
                             <th style="width: 150px; text-align: center;">Kode Barang</th>
                             <th style="width: 200px; text-align: center;">Nama Barang</th>
-                            <th style="width: 150px; text-align: center;">Id Transaksi</th>
                             <th style="width: 150px; text-align: center;">Jumlah Masuk</th>
                             <th style="width: 100px; text-align: center;">Satuan</th>
                             <th style="width: 200px; text-align: center;">Pengaturan</th>
@@ -42,30 +41,22 @@
                     <tbody>
                         <?php
                         $no = 1;
-                        $sql = $koneksi->query("
-                        SELECT bm.*, g.kode_barang as kode_gudang, g.nama_barang as nama_gudang 
-                        FROM barang_masuk bm
-                        LEFT JOIN gudang g ON bm.nama_barang = g.nama_barang
-                        ORDER BY bm.tanggal DESC
-                    ");                        while ($data = $sql->fetch_assoc()) {
-                              // Gunakan data dari gudang jika ada, jika tidak gunakan data dari barang_masuk
-                            $kode_barang = $data['kode_gudang'] ?? $data['kode_barang'];
-                            $nama_barang = $data['nama_gudang'] ?? $data['nama_barang'];
+                        $sql = $koneksi->query("SELECT * FROM barang_masuk");
+                        while ($data = $sql->fetch_assoc()) {
                             ?>
                             <tr>
                                 <td style="text-align: center;"><?php echo $no++; ?></td>
                                 <td style="text-align: center;"><?php echo $data['tanggal'] ?></td>
                                 <td style="text-align: center;"><?php echo $data['kode_barang'] ?></td>
                                 <td style="text-align: center;"><?php echo $data['nama_barang'] ?></td>
-                                <td style="text-align: center;"><?php echo $data['id_transaksi'] ?></td>
                                 <td style="text-align: center;"><?php echo $data['jumlah'] ?></td>
                                 <td style="text-align: center;"><?php echo $data['satuan'] ?></td>
                                 <td style="text-align: center;">
-                                    <a href="?page=barangmasuk&aksi=ubahbarangmasuk&id_transaksi=<?php echo $data['id_transaksi']; ?>"
+                                    <a href="?page=barangmasuk&aksi=ubahbarangmasuk&id_transaksi=<?php echo $data['id']; ?>"
                                         class="btn btn-info btn-sm custom-btn">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <a href="?page=barangmasuk&aksi=hapusbarangmasuk&id_transaksi=<?php echo $data['id_transaksi']; ?>"
+                                    <a href="?page=barangmasuk&aksi=hapusbarangmasuk&id_transaksi=<?php echo $data['id']; ?>"
                                         class="btn btn-danger btn-sm custom-btn"
                                         onclick="return confirm('Apakah anda yakin akan menghapus data ini?')">
                                         <i class="fas fa-trash"></i> Hapus
