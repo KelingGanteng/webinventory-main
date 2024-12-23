@@ -1,5 +1,6 @@
 <?php
 // Koneksi ke database
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 include('koneksibarang.php');
 
 // Cek apakah ada parameter 'id' di URL
@@ -14,7 +15,17 @@ if (isset($_GET['id'])) {
         $sql_delete = $koneksi->query("DELETE FROM aset WHERE id = '$id_aset'");
         if ($sql_delete) {
             // Redirect setelah berhasil menghapus data
-            echo "<script>alert('Data aset berhasil dihapus!'); window.location.href='?page=aset';</script>";
+            echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Data aset berhasil dihapus',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(function() {
+                window.location.href = '?page=aset';
+            });
+          </script>";
         } else {
             // Jika terjadi kesalahan dalam penghapusan
             echo "<script>alert('Terjadi kesalahan saat menghapus data aset!'); window.history.back();</script>";

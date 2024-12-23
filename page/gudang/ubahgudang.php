@@ -1,5 +1,6 @@
 <?php
 // Cek apakah kode_barang ada di URL
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 if (isset($_GET['kode_barang'])) {
     $kode_barang = $_GET['kode_barang'];
 
@@ -30,10 +31,17 @@ if (isset($_POST['update'])) {
         WHERE kode_barang='$kode_barang'");
 
     if ($update) {
-        echo "<script>
-                alert('Data berhasil diubah!');
-                window.location.href='?page=gudang';
-              </script>";
+			echo "<script>
+			Swal.fire({
+				icon: 'success',
+				title: 'Berhasil',
+				text: 'Data gudang berhasil diubah',
+				showConfirmButton: false,
+				timer: 1500
+			}).then(function() {
+				window.location.href = '?page=gudang';
+			});
+		  </script>"; 
     } else {
         echo "<script>
                 alert('Gagal mengubah data: " . $koneksi->error . "');

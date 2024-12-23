@@ -1,5 +1,6 @@
 <?php
 // Menghubungkan ke database
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 include('koneksibarang.php');
 
 // Menyimpan data jika tombol submit ditekan
@@ -14,8 +15,17 @@ if (isset($_POST['submit'])) {
 
     // Cek jika berhasil
     if ($sql) {
-        echo "<script>alert('Data berhasil ditambahkan!'); window.location='?page=daftarkaryawan';</script>";
-    } else {
+        echo "<script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Data karyawan berhasil disimpan',
+            showConfirmButton: false,
+            timer: 1500
+        }).then(function() {
+            window.location.href = '?page=daftarkaryawan';
+        });
+      </script>";      } else {
         echo "<script>alert('Gagal menambahkan data!');</script>";
     }
 }

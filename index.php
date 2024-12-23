@@ -651,17 +651,17 @@ $koneksi = new mysqli("localhost", "root", "", "webinventory");
 
             if ($page == "barangmasuk") {
               if ($aksi == "") {
-                include "page/barangmasuk/barangmasuk.php";
+                include "page/barangmasuk/barang_masuk.php";
               }
               if ($aksi == "tambahbarangmasuk") {
-                include "page/barangmasuk/tambahbarangmasuk.php";
+                include "page/barangmasuk/tambah_barang_masuk.php";
               }
               if ($aksi == "ubahbarangmasuk") {
-                include "page/barangmasuk/ubahbarangmasuk.php";
+                include "page/barangmasuk/ubah_barang_masuk.php";
               }
 
               if ($aksi == "hapusbarangmasuk") {
-                include "page/barangmasuk/hapusbarangmasuk.php";
+                include "page/barangmasuk/hapus_barang_masuk.php";
               }
             }
 

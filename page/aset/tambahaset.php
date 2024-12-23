@@ -3,6 +3,7 @@
 include('koneksibarang.php');
 
 // Mengecek apakah form sudah disubmit
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Memeriksa apakah 'kode_aset' dan 'nomor_urut' ada dalam form
     $kode_aset = isset($_POST['kode_aset']) ? $_POST['kode_aset'] : '';
@@ -49,8 +50,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             VALUES ('$kode_aset', '$kode_lengkap', '$departemen_id', '$status', '$tanggal_pembelian', '$karyawan_id', '$gudang_id')";
 
     if ($koneksi->query($sql) === TRUE) {
-        echo "<script>alert('Data aset berhasil ditambahkan!'); window.location.href='?page=aset';</script>";
-    } else {
+        echo "<script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Data aset berhasil ditambahkan',
+            showConfirmButton: false,
+            timer: 1500
+        }).then(function() {
+            window.location.href = '?page=aset';
+        });
+      </script>";    } else {
         echo "Error: " . $sql . "<br>" . $koneksi->error;
     }
 }

@@ -59,6 +59,7 @@
 					</form>
 
 					<?php
+					echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 						if (isset($_POST['simpan'])) {
 							$jenis_barang = $_POST['jenis_barang'];
 							$departemen_id = $_POST['departemen'];
@@ -80,12 +81,17 @@
 									$sql = $koneksi->query("INSERT INTO jenis_barang (jenis_barang, code_barang) VALUES ('$jenis_barang', '$new_code_barang')");
 
 									if ($sql) {
-										?>
-										<script type="text/javascript">
-											alert("Data Berhasil Disimpan");
-											window.location.href = "?page=jenisbarang";
-										</script>
-										<?php
+										echo "<script>
+										Swal.fire({
+											icon: 'success',
+											title: 'Berhasil',
+											text: 'Data jenis barang berhasil disimpan',
+											showConfirmButton: false,
+											timer: 1500
+										}).then(function() {
+											window.location.href = '?page=jenisbarang';
+										});
+									  </script>"; 
 									} else {
 										echo "Error: " . $koneksi->error;
 									}

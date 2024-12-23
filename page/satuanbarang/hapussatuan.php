@@ -1,4 +1,5 @@
 <?php
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 if (!isset($_GET['id'])) {
 	echo "<script>
         alert('ID tidak ditemukan!');
@@ -18,9 +19,16 @@ if ($data) {
 
 	if ($sql) {
 		echo "<script>
-            alert('Data " . htmlspecialchars($data['satuan']) . " berhasil dihapus');
-            window.location.href='?page=satuanbarang';
-        </script>";
+		Swal.fire({
+			icon: 'success',
+			title: 'Berhasil',
+			text: 'Data satuan barang berhasil dihapus',
+			showConfirmButton: false,
+			timer: 1500
+		}).then(function() {
+			window.location.href = '?page=satuanbarang';
+		});
+	  </script>";
 	} else {
 		echo "<script>
             alert('Gagal menghapus data: " . $koneksi->error . "');

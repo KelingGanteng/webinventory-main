@@ -1,4 +1,5 @@
 <?php
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 // Menghubungkan ke database
 include('koneksibarang.php');
 
@@ -15,7 +16,17 @@ if (isset($_GET['id'])) {
 
         // Jika berhasil menghapus
         if ($delete) {
-            echo "<script>alert('Departemen berhasil dihapus!'); window.location='?page=departemen';</script>";
+            echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Data departemen berhasil dihapus',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(function() {
+                window.location.href = '?page=departemen';
+            });
+          </script>";
         } else {
             echo "<script>alert('Gagal menghapus departemen.'); window.location='?page=departemen';</script>";
         }

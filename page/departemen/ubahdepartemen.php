@@ -1,4 +1,5 @@
 <?php
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 // Menghubungkan ke database
 include('koneksibarang.php');
 
@@ -40,8 +41,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Mengeksekusi query
         if ($koneksi->query($sql_update) === TRUE) {
             // Redirect ke halaman daftar departemen setelah berhasil update data
-            echo "<script>alert('Departemen berhasil diubah!'); window.location='?page=departemen';</script>";
-            exit;
+            echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Data departemen berhasil diubah',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(function() {
+                window.location.href = '?page=departemen';
+            });
+          </script>";            exit;
         } else {
             $error_message = "Gagal mengubah departemen: " . $koneksi->error;
         }

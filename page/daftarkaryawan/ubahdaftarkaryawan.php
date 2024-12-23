@@ -1,5 +1,6 @@
 <?php
 // Menghubungkan ke database
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 include('koneksibarang.php');
 
 // Ambil ID karyawan yang akan diubah dari URL
@@ -25,8 +26,17 @@ if (isset($_POST['submit'])) {
 
     // Cek jika berhasil
     if ($update_sql) {
-        echo "<script>alert('Data berhasil diubah!'); window.location='?page=daftarkaryawan';</script>";
-    } else {
+        echo "<script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Data karyawan berhasil diubah',
+            showConfirmButton: false,
+            timer: 1500
+        }).then(function() {
+            window.location.href = '?page=daftarkaryawan';
+        });
+      </script>";     } else {
         echo "<script>alert('Gagal mengubah data!');</script>";
     }
 }

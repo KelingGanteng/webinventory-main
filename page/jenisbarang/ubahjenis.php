@@ -101,12 +101,17 @@
 									$sql_update = $koneksi->query("UPDATE jenis_barang SET jenis_barang = '$jenis_barang', code_barang = '$new_code_barang', departemen = '$departemen_id', angka_romawi = '$angka_romawi' WHERE id = '$id'");
 
 									if ($sql_update) {
-										?>
-										<script type="text/javascript">
-											alert("Data Berhasil Diubah");
-											window.location.href = "?page=jenisbarang";
-										</script>
-										<?php
+										echo "<script>
+										Swal.fire({
+											icon: 'success',
+											title: 'Berhasil',
+											text: 'Data jenis barang berhasil disimpan',
+											showConfirmButton: false,
+											timer: 1500
+										}).then(function() {
+											window.location.href = '?page=jenisbarang';
+										});
+									  </script>"; 
 									} else {
 										echo "Error: " . $koneksi->error;
 									}

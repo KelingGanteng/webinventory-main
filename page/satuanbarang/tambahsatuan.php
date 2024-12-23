@@ -31,6 +31,7 @@
 
 
 					<?php
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 
 					if (isset($_POST['simpan'])) {
 						$satuan = $_POST['satuan'];
@@ -45,12 +46,17 @@
 							$sql = $koneksi->query("INSERT INTO satuan (satuan) VALUES('$satuan')");
 
 							if ($sql) {
-								?>
-								<script type="text/javascript">
-									alert("Data Berhasil Disimpan");
-									window.location.href = "?page=satuanbarang";
-								</script>
-								<?php
+								echo "<script>
+								Swal.fire({
+									icon: 'success',
+									title: 'Berhasil',
+									text: 'Data satuan barang berhasil disimpan',
+									showConfirmButton: false,
+									timer: 1500
+								}).then(function() {
+									window.location.href = '?page=satuanbarang';
+								});
+							  </script>"; 
 							}
 						}
 					}

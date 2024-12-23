@@ -17,6 +17,7 @@ if (isset($_GET['id'])) {
 }
 
 // Mengecek apakah form sudah disubmit
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Memeriksa apakah 'kode_aset' dan 'nomor_urut' ada dalam form
     $kode_aset = isset($_POST['kode_aset']) ? $_POST['kode_aset'] : '';
@@ -62,8 +63,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             WHERE id = '$id_aset'";
 
     if ($koneksi->query($sql) === TRUE) {
-        echo "<script>alert('Data aset berhasil diperbarui!'); window.location.href='?page=aset';</script>";
-    } else {
+        echo "<script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Data aset berhasil diPerbarui',
+            showConfirmButton: false,
+            timer: 1500
+        }).then(function() {
+            window.location.href = '?page=aset';
+        });
+      </script>";    } else {
         echo "Error: " . $sql . "<br>" . $koneksi->error;
     }
 }

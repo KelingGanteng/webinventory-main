@@ -45,7 +45,7 @@
 						<div class="form-group">
 							<div class="form-line">
 								<input type="number" name="jumlah" class="form-control" style="max-width: 70px;"
-									inputmode="numeric" min="0" step="1" value="0" readonly />
+									inputmode="numeric" min="0" step="1" value="1" readonly />
 							</div>
 						</div>
 
@@ -77,13 +77,14 @@
 						$jenis_barang = $_POST['jenis_barang'];
 						$jumlah = $_POST['jumlah'];
 						$satuan = $_POST['satuan'];
+						echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 
 
 
 
  // Cek apakah nama_barang sudah ada di gudang
     $cek = $koneksi->query("SELECT nama_barang FROM gudang WHERE nama_barang='$nama_barang'");
-    if ($cek->num_rows > 0) {
+    if ($cek->num_rows > 1) {
         echo "<script>
             alert('Nama barang sudah ada di gudang!');
         </script>";
@@ -95,10 +96,17 @@
             ('$kode_barang', '$nama_barang', '$jenis_barang', '$jumlah', '$satuan')");
 
         if ($sql) {
-            echo "<script>
-                alert('Data Berhasil Disimpan');
-                window.location.href='?page=gudang';
-            </script>";
+			echo "<script>
+			Swal.fire({
+				icon: 'success',
+				title: 'Berhasil',
+				text: 'Data gudang berhasil disimpan',
+				showConfirmButton: false,
+				timer: 1500
+			}).then(function() {
+				window.location.href = '?page=gudang';
+			});
+		  </script>"; 
         } else {
             echo "<script>
                 alert('Gagal menyimpan data: " . $koneksi->error . "');

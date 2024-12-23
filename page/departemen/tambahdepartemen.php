@@ -1,4 +1,5 @@
 <?php
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 // Menghubungkan ke database
 include('koneksibarang.php');
 
@@ -17,7 +18,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Mengeksekusi query
         if ($koneksi->query($sql) === TRUE) {
             // Redirect ke halaman daftar departemen setelah berhasil menambah data
-            echo "<script>alert('Departemen berhasil ditambahkan!'); window.location='?page=departemen';</script>";
+            echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Data departemen berhasil disimpan',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(function() {
+                window.location.href = '?page=departemen';
+            });
+          </script>";
             exit;
         } else {
             $error_message = "Gagal menambahkan departemen: " . $koneksi->error;

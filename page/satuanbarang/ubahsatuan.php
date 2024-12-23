@@ -1,4 +1,5 @@
 <?php
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 // Debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -65,9 +66,16 @@ if (isset($_POST['simpan'])) {
 
 	if ($sql) {
 		echo "<script>
-            alert('Data Berhasil Diubah');
-            window.location.href='?page=satuanbarang';
-        </script>";
+		Swal.fire({
+			icon: 'success',
+			title: 'Berhasil',
+			text: 'Data satuan barang berhasil diubah',
+			showConfirmButton: false,
+			timer: 1500
+		}).then(function() {
+			window.location.href = '?page=satuanbarang';
+		});
+	  </script>"; 
 	} else {
 		echo "<script>
             alert('Gagal Mengubah Data!');

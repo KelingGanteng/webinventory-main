@@ -1,5 +1,6 @@
 <?php
 // Koneksi ke database
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
 include('koneksibarang.php');
 
 // Ambil ID atau kode karyawan dari URL
@@ -19,8 +20,17 @@ if ($sql_aset) {
     $sql_karyawan = $koneksi->query("DELETE FROM daftar_karyawan WHERE id = '$id_karyawan'");
 
     if ($sql_karyawan) {
-        echo "<script>alert('Data karyawan berhasil dihapus!'); window.location.href='?page=daftarkaryawan';</script>";
-    } else {
+        echo "<script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Data karyawan berhasil dihapus',
+            showConfirmButton: false,
+            timer: 1500
+        }).then(function() {
+            window.location.href = '?page=daftarkaryawan';
+        });
+      </script>";    } else {
         echo "<script>alert('Gagal menghapus data karyawan!'); window.location.href='?page=daftarkaryawan';</script>";
     }
 } else {
