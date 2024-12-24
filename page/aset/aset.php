@@ -1,4 +1,4 @@
-    <div class="modal fade" id="detailModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal" id="detailModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="detailModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -229,28 +229,44 @@
         }
 
 
-        /* Tambahkan style ini */
+        /* Reset dan perbaikan style modal */
         .modal {
-            pointer-events: none;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1050;
+            opacity: 1;
+            transition: none;
         }
 
         .modal-dialog {
-            pointer-events: all;
+            position: relative;
+            width: auto;
+            margin: 1.75rem auto;
+            pointer-events: auto;
+            transform: none !important;
         }
 
         .modal-content {
-            pointer-events: all;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            outline: 0;
         }
 
-        /* Perbaikan untuk tombol close */
         .modal-header .btn-close {
-            position: absolute;
-            right: 1rem;
-            top: 1rem;
-            z-index: 1;
-            background-color: transparent;
+            background: none;
             border: none;
             color: white;
+            font-size: 1.5rem;
+            opacity: 0.8;
         }
 
         .modal-header .btn-close:focus {
@@ -258,35 +274,34 @@
             outline: none;
         }
 
-        /* Mencegah modal berkedip */
+        /* Hapus transisi yang tidak perlu */
         .modal.fade .modal-dialog {
-            transition: transform .3s ease-out;
-            transform: translate(0, -50px);
+            transition: none;
         }
 
         .modal.show .modal-dialog {
-            transform: none;
+            transform: none !important;
         }
 
 
         .modal-header {
         background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
         color: white;
-        padding: 1rem;
         border-top-left-radius: 15px;
         border-top-right-radius: 15px;
+        padding: 1rem;
         }
 
         .modal-header .btn-close {
-            color: white;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-            padding: 1rem;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        opacity: 0.8;
         }
-
+        
         .modal-header .btn-close:hover {
-            opacity: 1;
-            color: white;
+        opacity: 1;
         }
 
 
@@ -300,7 +315,9 @@
         }
 
         .modal-content {
+        border: none;
         border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.2);
         }
 
 
@@ -319,14 +336,14 @@
             padding: 8px 0;
         }
 
-        /* Hapus pointer-events dari modal */
         .modal {
-            z-index: 1050;
+        z-index: 1050;
         }
 
         .modal-backdrop {
-        z-index: 1040;
+            display: none !important;
         }
+
         
         /* Tooltip */
         .custom-btn[data-bs-toggle="tooltip"] {
@@ -411,46 +428,62 @@
     <!-- Setelah semua HTML, sebelum closing body -->
     <script>
    // Update script untuk modal
-    $(document).ready(function() {
-        // Inisialisasi modal
-        var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+$(document).ready(function() {
+    let currentModal = null;
+    
+    // Event handler untuk tombol view
+    $(document).on('click', '.view-btn', function(e) {
+        e.preventDefault();
         
-        // Event handler untuk tombol view
-        $(document).on('click', '.view-btn', function(e) {
-            e.preventDefault();
-            
-            // Ambil data dari button
-            var kode = $(this).data('kode');
-            var barang = $(this).data('barang');
-            var departemen = $(this).data('departemen');
-            var karyawan = $(this).data('karyawan');
-            var bagian = $(this).data('bagian');
-            var status = $(this).data('status');
-            var tanggal = $(this).data('tanggal');
-            var tanggalLabel = $(this).data('tanggal-label');
-            var keterangan = $(this).data('keterangan');
-            
-            // Set nilai ke dalam modal
-            $('#modal-kode').text(kode || '-');
-            $('#modal-barang').text(barang || '-');
-            $('#modal-departemen').text(departemen || '-');
-            $('#modal-karyawan').text(karyawan || '-');
-            $('#modal-bagian').text(bagian || '-');
-            $('#modal-status').text(status || '-');
-            $('#modal-tanggal-label').text(tanggalLabel || 'Tanggal');
-            $('#modal-tanggal').text(tanggal || '-');
-            $('#modal-keterangan').text(keterangan || '-');
-            
-            // Tampilkan modal
-            $('#detailModal').modal('show');
-        });
-
-        // Event handler untuk tombol close
-        $('.btn-close, .btn-secondary').on('click', function() {
-            $('#detailModal').modal('hide');
-        });
+        // Ambil data dari button
+        const kode = $(this).data('kode');
+        const barang = $(this).data('barang');
+        const departemen = $(this).data('departemen');
+        const karyawan = $(this).data('karyawan');
+        const bagian = $(this).data('bagian');
+        const status = $(this).data('status');
+        const tanggal = $(this).data('tanggal');
+        const tanggalLabel = $(this).data('tanggal-label');
+        const keterangan = $(this).data('keterangan');
+        
+        // Set nilai ke dalam modal
+        $('#modal-kode').text(kode || '-');
+        $('#modal-barang').text(barang || '-');
+        $('#modal-departemen').text(departemen || '-');
+        $('#modal-karyawan').text(karyawan || '-');
+        $('#modal-bagian').text(bagian || '-');
+        $('#modal-status').text(status || '-');
+        $('#modal-tanggal-label').text(tanggalLabel || 'Tanggal');
+        $('#modal-tanggal').text(tanggal || '-');
+        $('#modal-keterangan').text(keterangan || '-');
+        
+        // Tampilkan modal tanpa animasi
+        $('#detailModal').css('display', 'block');
+        $('body').addClass('modal-open');
     });
-    </script>
+
+    // Event handler untuk tombol close
+    $('.btn-close, .btn-secondary, .modal').on('click', function(e) {
+        if (e.target === this) {
+            $('#detailModal').css('display', 'none');
+            $('body').removeClass('modal-open');
+        }
+    });
+
+    // Prevent modal content click from closing modal
+    $('.modal-content').on('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Handle ESC key
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            $('#detailModal').css('display', 'none');
+            $('body').removeClass('modal-open');
+        }
+    });
+});
+</script>
 
     <!-- DataTable Initialization Script -->
     <script>
