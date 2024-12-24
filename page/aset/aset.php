@@ -102,7 +102,6 @@
                             <th style="width: 100px; text-align: center;">Bagian</th>
                             <th style="width: 100px; text-align: center;">Status</th>
                             <th style="width: 150px; text-align: center;">Tanggal</th>
-                            <th style="width: 150px; text-align: center;">Tanggal Penyerahan</th>
                             <th style="width: 200px; text-align: center;">Pengaturan</th>
                         </tr>
                     </thead>
