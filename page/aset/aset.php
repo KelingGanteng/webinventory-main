@@ -1,10 +1,11 @@
-<!-- Begin Page Content -->
-<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+<div class="modal fade" id="detailModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="detailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="detailModalLabel">Detail Aset</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="row">
@@ -49,6 +50,9 @@
                         </table>
                     </div>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -216,11 +220,67 @@
         box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
     }
 
-    /* Modal styling */
-    .modal-header {
-        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+
+     /* Tambahkan style ini */
+    .modal {
+        pointer-events: none;
+    }
+
+    .modal-dialog {
+        pointer-events: all;
+    }
+
+    .modal-content {
+        pointer-events: all;
+    }
+
+    /* Perbaikan untuk tombol close */
+    .modal-header .btn-close {
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+        z-index: 1;
+        background-color: transparent;
+        border: none;
         color: white;
     }
+
+    .modal-header .btn-close:focus {
+        box-shadow: none;
+        outline: none;
+    }
+
+    /* Mencegah modal berkedip */
+    .modal.fade .modal-dialog {
+        transition: transform .3s ease-out;
+        transform: translate(0, -50px);
+    }
+
+    .modal.show .modal-dialog {
+        transform: none;
+    }
+
+
+    .modal-header {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    padding: 1rem;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    }
+
+    .modal-header .btn-close {
+        color: white;
+        opacity: 0.8;
+        transition: opacity 0.3s;
+        padding: 1rem;
+    }
+
+    .modal-header .btn-close:hover {
+        opacity: 1;
+        color: white;
+    }
+
 
     .modal-body table th {
         width: 150px;
@@ -232,14 +292,34 @@
     }
 
     .modal-content {
-        border-radius: 15px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    border-radius: 15px;
+    }
+
+
+    .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+    }
+
+    .modal-footer .btn-secondary {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    border: none;
+    padding: 0.5rem 1.5rem;
     }
 
     .table-borderless th, .table-borderless td {
         padding: 8px 0;
     }
 
+    /* Hapus pointer-events dari modal */
+    .modal {
+        z-index: 1050;
+    }
+
+    .modal-backdrop {
+    z-index: 1040;
+    }
+    
     /* Tooltip */
     .custom-btn[data-bs-toggle="tooltip"] {
         position: relative;
@@ -298,20 +378,38 @@
 
 <!-- Tooltip Initialization (Bootstrap 5) -->
 <script>
-    var tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+ // Perbaikan Tooltip Initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Inisialisasi semua tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            trigger: 'hover'
+        });
+    });
+});
+
+// Atau jika menggunakan jQuery
+$(document).ready(function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            trigger: 'hover'
+        });
+    });
+});
 </script>
 
 <!-- Setelah semua HTML, sebelum closing body -->
 <script>
+// Update script untuk modal
 $(document).ready(function() {
-    // Debug: cek apakah event handler terpasang
-    console.log('Document ready');
+    // Inisialisasi modal
+    var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
     
+    // Event handler untuk tombol view
     $(document).on('click', '.view-btn', function(e) {
-        console.log('Button clicked');
+        e.preventDefault();
         
         // Ambil data dari button
         var kode = $(this).data('kode');
@@ -322,9 +420,6 @@ $(document).ready(function() {
         var status = $(this).data('status');
         var tanggal = $(this).data('tanggal');
         var keterangan = $(this).data('keterangan');
-        
-        // Debug: cek data
-        console.log('Data:', {kode, barang, departemen, karyawan, bagian, status, tanggal, keterangan});
         
         // Set nilai ke dalam modal
         $('#modal-kode').text(kode || '-');
@@ -338,6 +433,11 @@ $(document).ready(function() {
         
         // Tampilkan modal
         $('#detailModal').modal('show');
+    });
+
+    // Event handler untuk tombol close
+    $('.btn-close, .btn-secondary').on('click', function() {
+        $('#detailModal').modal('hide');
     });
 });
 </script>
