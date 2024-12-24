@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 23, 2024 at 09:38 AM
+-- Generation Time: Dec 24, 2024 at 07:58 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -29,15 +29,27 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `aset` (
   `id` int(11) NOT NULL,
-  `kode_aset` varchar(50) NOT NULL,
-  `jenis_barang_id` int(11) DEFAULT NULL,
-  `kode_lengkap` varchar(100) NOT NULL,
-  `gudang_id` int(11) NOT NULL,
+  `kode_aset` varchar(50) DEFAULT NULL,
+  `kode_lengkap` varchar(50) NOT NULL,
+  `gudang_id` int(11) DEFAULT NULL,
   `departemen_id` int(11) DEFAULT NULL,
   `karyawan_id` int(11) DEFAULT NULL,
-  `status` enum('Aktif','Tidak Aktif') NOT NULL,
-  `tanggal_pembelian` date NOT NULL
+  `jenis_barang_id` int(11) DEFAULT NULL,
+  `status` enum('Aktif','Tidak Aktif') DEFAULT 'Aktif',
+  `tanggal_pembelian` date DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `tanggal_keluar` date DEFAULT NULL,
+  `keterangan_keluar` text DEFAULT NULL,
+  `jumlah_keluar` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `aset`
+--
+
+INSERT INTO `aset` (`id`, `kode_aset`, `kode_lengkap`, `gudang_id`, `departemen_id`, `karyawan_id`, `jenis_barang_id`, `status`, `tanggal_pembelian`, `created_at`, `updated_at`, `tanggal_keluar`, `keterangan_keluar`, `jumlah_keluar`) VALUES
+(19, 'SF/IT/III', 'SF/IT/III/0001', 165, 23, 5, NULL, 'Aktif', '2024-12-24', '2024-12-24 06:42:51', '2024-12-24 06:52:26', '2024-12-26', 'adadawddawdwadwd', 1);
 
 -- --------------------------------------------------------
 
@@ -46,32 +58,13 @@ CREATE TABLE `aset` (
 --
 
 CREATE TABLE `barang_keluar` (
-  `id` int(11) NOT NULL,
-  `tanggal` date NOT NULL,
-  `kode_barang` varchar(100) NOT NULL,
-  `nama_barang` varchar(100) NOT NULL,
-  `jumlah` int(11) DEFAULT NULL,
-  `satuan` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `barang_keluar`
---
-
-INSERT INTO `barang_keluar` (`id`, `tanggal`, `kode_barang`, `nama_barang`, `jumlah`, `satuan`) VALUES
-(94, '2024-12-19', 'SF/IT/III', 'Logitech l200', 1, 'Unit'),
-(95, '2024-12-19', 'SF/IT/III', 'Logitech l300', 2, 'Unit');
-
---
--- Triggers `barang_keluar`
---
-DELIMITER $$
-CREATE TRIGGER `barang_keluar` AFTER INSERT ON `barang_keluar` FOR EACH ROW BEGIN
-	UPDATE gudang SET jumlah = jumlah-new.jumlah
-    WHERE kode_barang=new.kode_barang;
-    END
-$$
-DELIMITER ;
+  `id_barang_keluar` int(11) NOT NULL,
+  `id_barang` int(11) DEFAULT NULL,
+  `tanggal_keluar` date DEFAULT NULL,
+  `jumlah_keluar` int(11) DEFAULT NULL,
+  `keterangan` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -80,31 +73,21 @@ DELIMITER ;
 --
 
 CREATE TABLE `barang_masuk` (
-  `id` int(11) NOT NULL,
-  `tanggal` date NOT NULL,
-  `kode_barang` varchar(50) NOT NULL,
-  `nama_barang` varchar(255) NOT NULL,
-  `jumlah` int(11) DEFAULT NULL,
-  `satuan` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  `id_barang_masuk` int(11) NOT NULL,
+  `tanggal_masuk` date NOT NULL,
+  `id_barang` int(11) NOT NULL,
+  `jumlah_masuk` int(11) NOT NULL,
+  `keterangan` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `barang_masuk`
 --
 
-INSERT INTO `barang_masuk` (`id`, `tanggal`, `kode_barang`, `nama_barang`, `jumlah`, `satuan`) VALUES
-(258, '2024-12-23', 'SF/IT/III', 'babi', 1, 'Unit');
-
---
--- Triggers `barang_masuk`
---
-DELIMITER $$
-CREATE TRIGGER `barang_masuk` AFTER INSERT ON `barang_masuk` FOR EACH ROW BEGIN
-	UPDATE gudang SET jumlah = jumlah+new.jumlah
-    WHERE kode_barang=new.kode_barang;
-    END
-$$
-DELIMITER ;
+INSERT INTO `barang_masuk` (`id_barang_masuk`, `tanggal_masuk`, `id_barang`, `jumlah_masuk`, `keterangan`, `created_at`) VALUES
+(7, '2024-12-24', 164, 11, 'dawda', '2024-12-24 04:52:26'),
+(8, '2024-12-24', 165, 11, 'dawda', '2024-12-24 04:53:41');
 
 -- --------------------------------------------------------
 
@@ -173,7 +156,8 @@ CREATE TABLE `departemen` (
 --
 
 INSERT INTO `departemen` (`id`, `nama`) VALUES
-(23, 'IT');
+(23, 'IT'),
+(24, 'HRD');
 
 -- --------------------------------------------------------
 
@@ -195,8 +179,8 @@ CREATE TABLE `gudang` (
 --
 
 INSERT INTO `gudang` (`id`, `kode_barang`, `nama_barang`, `jenis_barang`, `jumlah`, `satuan`) VALUES
-(158, 'SF/IT/III', 'babi', 'Keyboard', '6', 'Unit'),
-(159, 'SF/IT/III', 'Logitech', 'Keyboard', '2', 'Unit');
+(164, 'SF/IT/I', 'Lenovo', 'Monitor', '4', 'Unit'),
+(165, 'SF/IT/III', 'Logitech', 'Keyboard', '5', 'Unit');
 
 -- --------------------------------------------------------
 
@@ -221,7 +205,8 @@ INSERT INTO `jenis_barang` (`id`, `jenis_barang`, `code_barang`, `departemen`, `
 (67, 'Mouse', 'SF/IT/II', 0, ''),
 (68, 'Keyboard', 'SF/IT/III', 0, ''),
 (69, 'Printer', 'SF/IT/IV', 0, ''),
-(70, 'Keyboard', 'SF/IT/III', 1, 'III');
+(70, 'Keyboard', 'SF/IT/III', 1, 'III'),
+(71, 'padet', 'SF/IT/IV', 0, '');
 
 -- --------------------------------------------------------
 
@@ -300,25 +285,25 @@ INSERT INTO `users` (`id`, `nik`, `nama`, `alamat`, `telepon`, `username`, `pass
 -- Indexes for table `aset`
 --
 ALTER TABLE `aset`
-  ADD PRIMARY KEY (`id`) USING BTREE,
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `gudang_id` (`gudang_id`),
   ADD KEY `departemen_id` (`departemen_id`),
   ADD KEY `karyawan_id` (`karyawan_id`),
-  ADD KEY `kode_aset` (`kode_aset`),
-  ADD KEY `aset_ibfk_3` (`gudang_id`) USING BTREE,
-  ADD KEY `aset_ibfk_4` (`jenis_barang_id`);
+  ADD KEY `jenis_barang_id` (`jenis_barang_id`);
 
 --
 -- Indexes for table `barang_keluar`
 --
 ALTER TABLE `barang_keluar`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id_barang_keluar`),
+  ADD KEY `id_barang` (`id_barang`);
 
 --
 -- Indexes for table `barang_masuk`
 --
 ALTER TABLE `barang_masuk`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_barang_masuk_gudang` (`kode_barang`,`nama_barang`);
+  ADD PRIMARY KEY (`id_barang_masuk`),
+  ADD KEY `id_barang` (`id_barang`);
 
 --
 -- Indexes for table `barang_retur`
@@ -386,19 +371,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `aset`
 --
 ALTER TABLE `aset`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `barang_keluar`
 --
 ALTER TABLE `barang_keluar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
+  MODIFY `id_barang_keluar` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `barang_masuk`
 --
 ALTER TABLE `barang_masuk`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=259;
+  MODIFY `id_barang_masuk` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `daftar_karyawan`
@@ -410,19 +395,19 @@ ALTER TABLE `daftar_karyawan`
 -- AUTO_INCREMENT for table `departemen`
 --
 ALTER TABLE `departemen`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `gudang`
 --
 ALTER TABLE `gudang`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=160;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=166;
 
 --
 -- AUTO_INCREMENT for table `jenis_barang`
 --
 ALTER TABLE `jenis_barang`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
 -- AUTO_INCREMENT for table `kerusakan_barang`
@@ -456,27 +441,28 @@ ALTER TABLE `users`
 -- Constraints for table `aset`
 --
 ALTER TABLE `aset`
-  ADD CONSTRAINT `aset_ibfk_1` FOREIGN KEY (`departemen_id`) REFERENCES `departemen` (`id`),
-  ADD CONSTRAINT `aset_ibfk_2` FOREIGN KEY (`karyawan_id`) REFERENCES `daftar_karyawan` (`id`),
-  ADD CONSTRAINT `aset_ibfk_3` FOREIGN KEY (`gudang_id`) REFERENCES `gudang` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `aset_ibfk_1` FOREIGN KEY (`gudang_id`) REFERENCES `gudang` (`id`),
+  ADD CONSTRAINT `aset_ibfk_2` FOREIGN KEY (`departemen_id`) REFERENCES `departemen` (`id`),
+  ADD CONSTRAINT `aset_ibfk_3` FOREIGN KEY (`karyawan_id`) REFERENCES `daftar_karyawan` (`id`),
+  ADD CONSTRAINT `aset_ibfk_4` FOREIGN KEY (`jenis_barang_id`) REFERENCES `jenis_barang` (`id`);
+
+--
+-- Constraints for table `barang_keluar`
+--
+ALTER TABLE `barang_keluar`
+  ADD CONSTRAINT `barang_keluar_ibfk_1` FOREIGN KEY (`id_barang`) REFERENCES `gudang` (`id`);
 
 --
 -- Constraints for table `barang_masuk`
 --
 ALTER TABLE `barang_masuk`
-  ADD CONSTRAINT `fk_barang_masuk_gudang` FOREIGN KEY (`kode_barang`,`nama_barang`) REFERENCES `gudang` (`kode_barang`, `nama_barang`);
+  ADD CONSTRAINT `barang_masuk_ibfk_1` FOREIGN KEY (`id_barang`) REFERENCES `gudang` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `daftar_karyawan`
 --
 ALTER TABLE `daftar_karyawan`
   ADD CONSTRAINT `daftar_karyawan_ibfk_1` FOREIGN KEY (`departemen_id`) REFERENCES `departemen` (`id`);
-
---
--- Constraints for table `gudang`
---
-ALTER TABLE `gudang`
-  ADD CONSTRAINT `fk_gudang_jenis_barang` FOREIGN KEY (`kode_barang`) REFERENCES `jenis_barang` (`code_barang`) ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

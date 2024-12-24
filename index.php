@@ -614,6 +614,10 @@ $koneksi = new mysqli("localhost", "root", "", "webinventory");
                 include "page/aset/aset.php";
               } elseif ($aksi == "tambahaset") {
                 include "page/aset/tambahaset.php";
+              } elseif ($aksi == "return") {
+                include "page/aset/return.php";
+              } elseif ($aksi == "serahkan") {
+                include "page/aset/serahkan.php";
               } elseif ($aksi == "ubahaset") {
                 include "page/aset/ubahaset.php";
               } elseif ($aksi == "hapusaset") {

@@ -1,4 +1,59 @@
 <!-- Begin Page Content -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel">Detail Aset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Kode Aset</th>
+                                <td id="modal-kode"></td>
+                            </tr>
+                            <tr>
+                                <th>Nama Barang</th>
+                                <td id="modal-barang"></td>
+                            </tr>
+                            <tr>
+                                <th>Departemen</th>
+                                <td id="modal-departemen"></td>
+                            </tr>
+                            <tr>
+                                <th>Karyawan</th>
+                                <td id="modal-karyawan"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Bagian</th>
+                                <td id="modal-bagian"></td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td id="modal-status"></td>
+                            </tr>
+                            <tr>
+                                <th>Tanggal</th>
+                                <td id="modal-tanggal"></td>
+                            </tr>
+                            <tr>
+                                <th>Keterangan</th>
+                                <td id="modal-keterangan"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid">
     <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -12,8 +67,7 @@
                 </a>
             </div>
 
-
-             <!-- Filter Tanggal dan Status -->
+            <!-- Filter Tanggal dan Status -->
             <div class="row mb-3">
                 <div class="col-md-6">
                     <div class="input-group">
@@ -28,16 +82,15 @@
                     <div class="input-group">
                         <span class="input-group-text">Status</span>
                         <select id="statusFilter" name="status" class="form-control">
-                        <option value="">Semua</option>
-                        <option value="Aktif">Aktif</option>
-                        <option value="Tidak Aktif">Tidak Aktif</option>
-                    </select>
-
+                            <option value="">Semua</option>
+                            <option value="Aktif">Aktif</option>
+                            <option value="Tidak Aktif">Tidak Aktif</option>
+                        </select>
                     </div>
                 </div>
             </div>
-            <!-- Tabel Barang Masuk -->
-            <div class="table-responsive">
+             <!-- Tabel Barang Masuk -->
+             <div class="table-responsive">
                 <table class="table table-bordered" id="aset" width="100%" cellspacing="0">
                     <thead>
                         <tr>
@@ -48,6 +101,7 @@
                             <th style="width: 100px; text-align: center;">Karyawan</th>
                             <th style="width: 100px; text-align: center;">Bagian</th>
                             <th style="width: 100px; text-align: center;">Status</th>
+                            <th style="width: 150px; text-align: center;">Tanggal</th>
                             <th style="width: 150px; text-align: center;">Tanggal Penyerahan</th>
                             <th style="width: 200px; text-align: center;">Pengaturan</th>
                         </tr>
@@ -67,11 +121,10 @@
                             LEFT JOIN departemen ON aset.departemen_id = departemen.id
                             LEFT JOIN jenis_barang ON aset.jenis_barang_id = jenis_barang.id
                             LEFT JOIN gudang ON aset.gudang_id = gudang.id
-                        ") ;        
+                        ");        
 
-                    
                         if ($sql === false) {
-                            die('Error SQL: ' . $koneksi->error); // Tampilkan pesan error jika query gagal
+                            die('Error SQL: ' . $koneksi->error);
                         } else
                             while ($data = $sql->fetch_assoc()) {
                                 ?>
@@ -83,18 +136,54 @@
                                     <td style="text-align: center;"><?php echo $data['nama_karyawan'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['bagian'] ?></td>
                                     <td style="text-align: center;"><?php echo $data['status'] ?></td>
-                                    <td style="text-align: center;"><?php echo $data['tanggal_pembelian'] ?></td>
                                     <td style="text-align: center;">
+                                        <?php 
+                                        if ($data['status'] == 'Aktif') {
+                                            echo !empty($data['tanggal_pembelian']) ? date('d-m-Y', strtotime($data['tanggal_pembelian'])) : '-';
+                                        } else if ($data['status'] == 'Tidak Aktif' && !empty($data['tanggal_keluar'])) {
+                                            echo date('d-m-Y', strtotime($data['tanggal_keluar']));
+                                        } else {
+                                            echo '-';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td style="text-align: center;">
+                                    <button type="button" 
+                                            class="btn btn-primary btn-sm custom-btn view-btn" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#detailModal"
+                                            data-kode="<?php echo htmlspecialchars($data['kode_lengkap']); ?>"
+                                            data-barang="<?php echo htmlspecialchars($data['gudang_id']); ?>"
+                                            data-departemen="<?php echo htmlspecialchars($data['nama_departemen']); ?>"
+                                            data-karyawan="<?php echo htmlspecialchars($data['nama_karyawan']); ?>"
+                                            data-bagian="<?php echo htmlspecialchars($data['bagian']); ?>"
+                                            data-status="<?php echo htmlspecialchars($data['status']); ?>"
+                                            data-tanggal="<?php echo $data['status'] == 'Aktif' ? 
+                                                (isset($data['tanggal_pembelian']) ? date('d-m-Y', strtotime($data['tanggal_pembelian'])) : '-') : 
+                                                (isset($data['tanggal_keluar']) ? date('d-m-Y', strtotime($data['tanggal_keluar'])) : '-'); ?>"
+                                            data-keterangan="<?php echo htmlspecialchars($data['keterangan_keluar'] ?? '-'); ?>">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
                                         <a href="?page=aset&aksi=ubahaset&id=<?php echo $data['id']; ?>"
                                             class="btn btn-info btn-sm custom-btn">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
+                                        <?php if($data['status'] == 'Aktif'): ?>
+                                            <a href="?page=aset&aksi=return&id=<?php echo $data['id']; ?>"
+                                                class="btn btn-warning btn-sm custom-btn">
+                                                <i class="fas fa-undo"></i> Return
+                                            </a>
+                                        <?php else: ?>
+                                            <a href="?page=aset&aksi=serahkan&id=<?php echo $data['id']; ?>"
+                                                class="btn btn-success btn-sm custom-btn">
+                                                <i class="fas fa-share"></i> Serahkan
+                                            </a>
+                                        <?php endif; ?>
                                         <a href="?page=aset&aksi=hapusaset&id=<?php echo $data['id']; ?>"
                                             class="btn btn-danger btn-sm custom-btn"
                                             onclick="return confirm('Apakah anda yakin akan menghapus data ini?')">
                                             <i class="fas fa-trash"></i> Hapus
                                         </a>
-
                                     </td>
                                 </tr>
                             <?php } ?>
@@ -126,6 +215,30 @@
     .custom-btn:focus {
         outline: none;
         box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
+    }
+
+    /* Modal styling */
+    .modal-header {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+    }
+
+    .modal-body table th {
+        width: 150px;
+        color: #6a11cb;
+    }
+
+    .view-btn {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    .table-borderless th, .table-borderless td {
+        padding: 8px 0;
     }
 
     /* Tooltip */
@@ -164,6 +277,24 @@
     .dt-buttons .btn i {
         margin-right: 5px;
     }
+
+    /* Perbaikan untuk tombol dalam tabel */
+    .table td .btn-sm {
+        margin: 2px;
+        padding: 0.25rem 0.5rem;
+        display: inline-block;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    /* Mengatur lebar kolom aksi */
+    .table th:last-child,
+    .table td:last-child {
+        min-width: 200px;
+        white-space: nowrap;
+    }    
 </style>
 
 <!-- Tooltip Initialization (Bootstrap 5) -->
@@ -172,6 +303,44 @@
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     })
+</script>
+
+<!-- Setelah semua HTML, sebelum closing body -->
+<script>
+$(document).ready(function() {
+    // Debug: cek apakah event handler terpasang
+    console.log('Document ready');
+    
+    $(document).on('click', '.view-btn', function(e) {
+        console.log('Button clicked');
+        
+        // Ambil data dari button
+        var kode = $(this).data('kode');
+        var barang = $(this).data('barang');
+        var departemen = $(this).data('departemen');
+        var karyawan = $(this).data('karyawan');
+        var bagian = $(this).data('bagian');
+        var status = $(this).data('status');
+        var tanggal = $(this).data('tanggal');
+        var keterangan = $(this).data('keterangan');
+        
+        // Debug: cek data
+        console.log('Data:', {kode, barang, departemen, karyawan, bagian, status, tanggal, keterangan});
+        
+        // Set nilai ke dalam modal
+        $('#modal-kode').text(kode || '-');
+        $('#modal-barang').text(barang || '-');
+        $('#modal-departemen').text(departemen || '-');
+        $('#modal-karyawan').text(karyawan || '-');
+        $('#modal-bagian').text(bagian || '-');
+        $('#modal-status').text(status || '-');
+        $('#modal-tanggal').text(tanggal || '-');
+        $('#modal-keterangan').text(keterangan || '-');
+        
+        // Tampilkan modal
+        $('#detailModal').modal('show');
+    });
+});
 </script>
 
 <!-- DataTable Initialization Script -->
@@ -223,44 +392,44 @@
             order: [[2, 'desc']]
         });
 
-        // Menambahkan filter berdasarkan tanggal
+        // Filter berdasarkan tanggal
         $.fn.dataTable.ext.search.push(
             function (settings, data, dataIndex) {
                 var min = $('#min').val();
                 var max = $('#max').val();
-                var date = data[6]; // Kolom Tanggal Pembelian (index 6)
+                var date = data[7]; // Sesuaikan dengan index kolom tanggal
 
                 if (min === "" && max === "") return true;
+                if (date === '-') return false;
+                
+                if (date) {
+                    var parts = date.split('-');
+                    date = parts[2] + '-' + parts[1] + '-' + parts[0];
+                }
+
                 if (min === "") return date <= max;
                 if (max === "") return date >= min;
                 return date >= min && date <= max;
             }
         );
 
-      // Menambahkan filter berdasarkan status
-      // Menambahkan filter berdasarkan status
+        // Filter berdasarkan status
         $.fn.dataTable.ext.search.push(
             function (settings, data, dataIndex) {
-                var statusFilter = $('#statusFilter').val(); // Ambil nilai filter
-                var status = data[6]; // Kolom Status (index 6 dalam tabel)
+                var statusFilter = $('#statusFilter').val();
+                var status = data[6]; // Kolom Status
 
-                if (statusFilter === "") return true; // Tampilkan semua jika tidak ada filter
-                return status === statusFilter; // Cocokkan nilai status secara case-sensitive
+                if (statusFilter === "") return true;
+                return status === statusFilter;
             }
         );
 
-// Event listener untuk filter status
-$('#statusFilter').on('change', function () {
-    table.draw();
-});
-
-        // Event listener untuk filter tanggal
-        $('#min, #max').on('change', function () {
+        // Event listeners untuk filter
+        $('#statusFilter').on('change', function () {
             table.draw();
         });
 
-        // Event listener untuk filter status
-        $('#statusFilter').on('change', function () {
+        $('#min, #max').on('change', function () {
             table.draw();
         });
     });

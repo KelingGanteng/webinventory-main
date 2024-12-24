@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $gudang_id = $_POST['gudang_id']; // Ambil jenis barang dari form
 
         // Gabungkan kode aset, jenis barang, dan nomor urut untuk membentuk kode lengkap
-        $kode_lengkap = $kode_aset . '/' . $gudang_id . '/' . $nomor_urut; // Format: CBA001/Laptop/0001
+        $kode_lengkap = $kode_aset . '/' . $nomor_urut; // Format: CBA001/Laptop/0001
     } else {
         $kode_lengkap = ''; // Tidak ada kode lengkap jika tidak ada kode aset atau nomor urut
     }
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $departemen_id = $_POST['departemen_id'];
     $gudang_id = $_POST['gudang_id'];
     $status = $_POST['status'];
-    $tanggal_pembelian = $_POST['tanggal_pembelian'];
+
     $karyawan_id = $_POST['karyawan_id'];
 
 
@@ -46,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Query untuk menyimpan data ke database
-    $sql = "INSERT INTO aset (kode_aset, kode_lengkap, departemen_id, status, tanggal_pembelian, karyawan_id, gudang_id) 
-            VALUES ('$kode_aset', '$kode_lengkap', '$departemen_id', '$status', '$tanggal_pembelian', '$karyawan_id', '$gudang_id')";
+    $sql = "INSERT INTO aset (kode_aset, kode_lengkap, departemen_id, status,  karyawan_id, gudang_id) 
+            VALUES ('$kode_aset', '$kode_lengkap', '$departemen_id', '$status',  '$karyawan_id', '$gudang_id')";
 
     if ($koneksi->query($sql) === TRUE) {
         echo "<script>
@@ -154,10 +154,10 @@ $(document).ready(function() {
         }
 
         if (kodeAset && gudangText && nomorUrut) {
-            var kodeLengkap = kodeAset + '/' + gudangText + '/' + nomorUrut;
+            var kodeLengkap = kodeAset + '/' + nomorUrut;
             $('#kode_lengkap').val(kodeLengkap);
         } else {
-            $('#kode_lengkap').val('');
+            $('#kode_lengkap').val(''); 
         }
     }
 
@@ -203,16 +203,12 @@ $(document).ready(function() {
                 <div class="mb-3">
                     <label for="status" class="form-label">Status</label>
                     <select id="status" name="status" class="form-control" required>
-                        <option value="Aktif">Aktif</option>
                         <option value="Tidak Aktif">Tidak Aktif</option>
+                        <option value="Aktif">Aktif</option>
                     </select>
                 </div>
 
-                <!-- Input untuk Tanggal Pembelian -->
-                <div class="mb-3">
-                    <label for="tanggal_pembelian" class="form-label">Tanggal Penyerahan</label>
-                    <input type="date" class="form-control" id="tanggal_pembelian" name="tanggal_pembelian" required>
-                </div>
+
 
                 <!-- Tombol Submit -->
                 <div class="mb-3">

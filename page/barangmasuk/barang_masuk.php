@@ -48,8 +48,8 @@
                                 <td><?php echo htmlspecialchars($data['nama_barang']); ?></td>
                                 <td><?php echo htmlspecialchars($data['jenis_barang']); ?></td>
                                 <td><?php echo htmlspecialchars($data['jumlah_masuk']); ?></td>
-                                <td><?php echo htmlspecialchars($data['satuan']); ?></td>
                                 <td><?php echo htmlspecialchars($data['keterangan']); ?></td>
+                                <td><?php echo htmlspecialchars($data['satuan']); ?></td>
                                 <td class="text-center">
                                     <a href="?page=barangmasuk&aksi=ubahbarangmasuk&id=<?php echo $data['id_barang_masuk']; ?>" 
                                     class="btn btn-info btn-sm custom-btn" title="Edit">

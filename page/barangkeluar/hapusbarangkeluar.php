@@ -1,54 +1,71 @@
 <?php
-if (isset($_GET['id'])) {
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
+
+if(isset($_GET['id'])) {
+    $id = $_GET['id'];
+    
+    // Mulai transaksi
+    $koneksi->begin_transaction();
+    
     try {
-        $koneksi->begin_transaction();
+        // Ambil informasi barang keluar sebelum dihapus
+        $sql_select = "SELECT id_barang, jumlah_keluar FROM barang_keluar WHERE id_barang_keluar = ?";
+        $stmt_select = $koneksi->prepare($sql_select);
+        $stmt_select->bind_param("i", $id);
+        $stmt_select->execute();
+        $result = $stmt_select->get_result();
+        $data = $result->fetch_assoc();
         
-        $id = (int)$_GET['id'];
-        
-        // Ambil data barang keluar sebelum dihapus
-        $sql_get = "SELECT kode_barang, jumlah FROM barang_keluar WHERE id = ?";
-        $stmt_get = $koneksi->prepare($sql_get);
-        $stmt_get->bind_param("i", $id);
-        $stmt_get->execute();
-        $result = $stmt_get->get_result();
-        
-        if ($data = $result->fetch_assoc()) {
-            $kode_barang = $data['kode_barang'];
-            $jumlah_kembali = (int)$data['jumlah'];
-            
-            // Kembalikan stok ke gudang
-            $sql_update = "UPDATE gudang 
-                          SET jumlah = jumlah + ? 
-                          WHERE kode_barang = ?";
-            $stmt_update = $koneksi->prepare($sql_update);
-            $stmt_update->bind_param("is", $jumlah_kembali, $kode_barang);
-            $stmt_update->execute();
-            
-            // Hapus data barang keluar
-            $sql_delete = "DELETE FROM barang_keluar WHERE id = ?";
-            $stmt_delete = $koneksi->prepare($sql_delete);
-            $stmt_delete->bind_param("i", $id);
-            $stmt_delete->execute();
-            
-            $koneksi->commit();
-            echo "<script>
-                alert('Data Berhasil Dihapus');
-                window.location.href='?page=barangkeluar';
-            </script>";
-        } else {
-            throw new Exception("Data tidak ditemukan");
+        if (!$data) {
+            throw new Exception("Data barang keluar tidak ditemukan");
         }
-    } catch (Exception $e) {
-        $koneksi->rollback();
+        
+        // Kembalikan stok ke gudang
+        $sql_update = "UPDATE gudang SET jumlah = jumlah + ? WHERE id = ?";
+        $stmt_update = $koneksi->prepare($sql_update);
+        $stmt_update->bind_param("ii", $data['jumlah_keluar'], $data['id_barang']);
+        
+        if (!$stmt_update->execute()) {
+            throw new Exception("Error updating stock: " . $stmt_update->error);
+        }
+        
+        // Hapus data barang keluar
+        $sql_delete = "DELETE FROM barang_keluar WHERE id_barang_keluar = ?";
+        $stmt_delete = $koneksi->prepare($sql_delete);
+        $stmt_delete->bind_param("i", $id);
+        
+        if (!$stmt_delete->execute()) {
+            throw new Exception("Error deleting record: " . $stmt_delete->error);
+        }
+        
+        // Commit transaksi
+        $koneksi->commit();
+        
         echo "<script>
-            alert('Error: " . addslashes($e->getMessage()) . "');
-            window.location.href='?page=barangkeluar';
-        </script>";
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Data barang keluar berhasil dihapus',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(function() {
+                    window.location.href = '?page=barangkeluar';
+                });
+              </script>";
+    } catch (Exception $e) {
+        // Rollback jika terjadi error
+        $koneksi->rollback();
+        
+        echo "<script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Terjadi kesalahan: " . addslashes($e->getMessage()) . "',
+                    showConfirmButton: true
+                }).then(function() {
+                    window.location.href = '?page=barangkeluar';
+                });
+              </script>";
     }
-} else {
-    echo "<script>
-        alert('ID tidak valid');
-        window.location.href='?page=barangkeluar';
-    </script>";
 }
 ?>

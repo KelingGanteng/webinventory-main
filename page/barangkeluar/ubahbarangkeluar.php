@@ -1,166 +1,211 @@
 <?php
-// Koneksi ke database
-$koneksi = new mysqli("localhost", "root", "", "webinventory");
-
-// Periksa apakah koneksi berhasil
-if ($koneksi->connect_error) {
-    die("Koneksi gagal: " . $koneksi->connect_error);
-}
-
-// Periksa apakah ada ID yang dikirim
-if (isset($_GET['id'])) {
-    $id = (int)$_GET['id'];
-    
-    // Ambil data transaksi
-    $sql = "SELECT * FROM barang_keluar WHERE id = ?";
-    $stmt = $koneksi->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        $data_transaksi = $result->fetch_assoc();
-        
-        // Ambil data barang
-        $kode_barang = $data_transaksi['kode_barang'];
-        $nama_barang = $data_transaksi['nama_barang'];
-        $jumlah = $data_transaksi['jumlah'];
-        $satuan = $data_transaksi['satuan'];
-    } else {
-        echo "<script>
-            alert('Data transaksi tidak ditemukan!');
-            window.location.href='?page=barangkeluar';
-        </script>";
-        exit;
-    }
-} else {
-    echo "<script>
-        alert('ID tidak valid!');
-        window.location.href='?page=barangkeluar';
-    </script>";
-    exit;
-}
-
-// Proses simpan perubahan
-if (isset($_POST['simpan'])) {
-    try {
-        $koneksi->begin_transaction();
-
-        $id = (int)$_GET['id'];
-        $jumlah_baru = (int)$_POST['jumlah'];
-        
-        // Ambil data barang keluar yang lama
-        $sql_old = "SELECT kode_barang, jumlah FROM barang_keluar WHERE id = ?";
-        $stmt_old = $koneksi->prepare($sql_old);
-        $stmt_old->bind_param("i", $id);
-        $stmt_old->execute();
-        $result_old = $stmt_old->get_result();
-        
-        if ($result_old && $data_old = $result_old->fetch_assoc()) {
-            $jumlah_lama = (int)$data_old['jumlah'];
-            $kode_barang = $data_old['kode_barang'];
-
-            // Debug: Tampilkan kode barang yang dicari
-            error_log("Mencari barang dengan kode: " . $kode_barang);
-
-            // Cek stok di gudang dengan LIKE untuk mencocokkan kode barang
-            $sql_stok = "SELECT jumlah FROM gudang WHERE kode_barang LIKE CONCAT(?, '%')";
-            $stmt_stok = $koneksi->prepare($sql_stok);
-            $kode_base = explode('-', $kode_barang)[0]; // Ambil bagian dasar kode (SF/IT/III)
-            $stmt_stok->bind_param("s", $kode_base);
-            $stmt_stok->execute();
-            $result_stok = $stmt_stok->get_result();
-            
-            if ($result_stok && $data_stok = $result_stok->fetch_assoc()) {
-                $stok_gudang = (int)$data_stok['jumlah'];
-                
-                // Debug: Tampilkan stok yang ditemukan
-                error_log("Stok ditemukan: " . $stok_gudang);
-                
-                // Hitung stok yang tersedia
-                $stok_sekarang = $stok_gudang + $jumlah_lama;
-
-                // Validasi stok mencukupi
-                if ($stok_sekarang >= $jumlah_baru) {
-                    // Update stok di gudang
-                    $stok_akhir = $stok_sekarang - $jumlah_baru;
-                    $sql_update_gudang = "UPDATE gudang 
-                                        SET jumlah = ? 
-                                        WHERE kode_barang LIKE CONCAT(?, '%')";
-                    $stmt_gudang = $koneksi->prepare($sql_update_gudang);
-                    $stmt_gudang->bind_param("is", $stok_akhir, $kode_base);
-                    $stmt_gudang->execute();
-
-                    // Update data barang keluar
-                    $sql_update = "UPDATE barang_keluar 
-                                SET jumlah = ? 
-                                WHERE id = ?";
-                    $stmt_update = $koneksi->prepare($sql_update);
-                    $stmt_update->bind_param("ii", $jumlah_baru, $id);
-                    $stmt_update->execute();
-
-                    $koneksi->commit();
-                    echo "<script>
-                        alert('Data berhasil diubah!');
-                        window.location.href='?page=barangkeluar';
-                    </script>";
-                } else {
-                    throw new Exception("Stok tidak mencukupi! Stok tersedia: " . $stok_sekarang);
-                }
-            } else {
-                throw new Exception("Data barang dengan kode " . $kode_barang . " tidak ditemukan di gudang!");
-            }
-        } else {
-            throw new Exception("Data barang keluar tidak ditemukan!");
-        }
-    } catch (Exception $e) {
-        $koneksi->rollback();
-        echo "<script>
-            alert('Error: " . addslashes($e->getMessage()) . "');
-        </script>";
-    }
-}
+// Ambil data barang keluar yang akan diubah
+$id = $_GET['id'];
+$sql = $koneksi->query("
+    SELECT bk.*, g.kode_barang, g.nama_barang, g.jenis_barang, g.satuan, g.jumlah as stok_sekarang 
+    FROM barang_keluar bk
+    LEFT JOIN gudang g ON bk.id_barang = g.id
+    WHERE bk.id_barang_keluar = $id
+");
+$data = $sql->fetch_assoc();
+$stok_awal = $data['stok_sekarang'] + $data['jumlah_keluar']; // Menghitung stok awal
 ?>
 
+<!-- Begin Page Content -->
 <div class="container-fluid">
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Ubah Barang Keluar</h6>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <div class="body">
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label>Kode Barang</label>
-                            <input type="text" class="form-control" name="kode_barang" 
-                                   value="<?php echo $kode_barang; ?>" readonly>
-                        </div>
+            <form method="POST">
+                <input type="hidden" name="id_barang_keluar" value="<?php echo $id; ?>">
+                <input type="hidden" name="jumlah_keluar_lama" value="<?php echo $data['jumlah_keluar']; ?>">
+                <input type="hidden" name="id_barang_lama" value="<?php echo $data['id_barang']; ?>">
 
-                        <div class="form-group">
-                            <label>Nama Barang</label>
-                            <input type="text" class="form-control" name="nama_barang" 
-                                   value="<?php echo $nama_barang; ?>" readonly>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Jumlah</label>
-                            <input type="number" class="form-control" name="jumlah" id="jumlahkeluar" 
-                                   value="<?php echo $jumlah; ?>" min="1">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Satuan</label>
-                            <input type="text" class="form-control" name="satuan" 
-                                   value="<?php echo $satuan; ?>" readonly>
-                        </div>
-
-                        <button type="submit" name="simpan" class="btn btn-primary">
-                            <i class="fa fa-save"></i> Simpan
-                        </button>
-                    </form>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="kode_barang" class="form-label">Pilih Barang</label>
+                        <select class="form-control select2" name="kode_barang" id="kode_barang" required>
+                            <?php
+                            $sql_barang = $koneksi->query("SELECT id, kode_barang, nama_barang, jenis_barang, satuan, jumlah FROM gudang ORDER BY kode_barang");
+                            while ($barang = $sql_barang->fetch_assoc()) {
+                                $selected = ($barang['id'] == $data['id_barang']) ? 'selected' : '';
+                                echo "<option value='" . $barang['id'] . "' 
+                                    data-stok='" . $barang['jumlah'] . "'
+                                    data-jenis='" . $barang['jenis_barang'] . "'
+                                    data-nama='" . $barang['nama_barang'] . "'
+                                    data-satuan='" . $barang['satuan'] . "' 
+                                    $selected>" . 
+                                    $barang['kode_barang'] . " - " . $barang['nama_barang'] . 
+                                    "</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="tanggal_keluar" class="form-label">Tanggal Keluar</label>
+                        <input type="date" class="form-control" name="tanggal_keluar" 
+                               value="<?php echo $data['tanggal_keluar']; ?>" required>
+                    </div>
                 </div>
-            </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Jenis Barang</label>
+                        <input type="text" class="form-control" id="jenis_barang" 
+                               value="<?php echo $data['jenis_barang']; ?>" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Nama Barang</label>
+                        <input type="text" class="form-control" id="nama_barang" 
+                               value="<?php echo $data['nama_barang']; ?>" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Stok Tersedia</label>
+                        <input type="text" class="form-control" id="stok_tersedia" 
+                               value="<?php echo $stok_awal; ?>" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Satuan</label>
+                        <input type="text" class="form-control" id="satuan" 
+                               value="<?php echo $data['satuan']; ?>" readonly>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="jumlah_keluar" class="form-label">Jumlah Keluar</label>
+                        <input type="number" class="form-control" name="jumlah_keluar" id="jumlah_keluar" 
+                               value="<?php echo $data['jumlah_keluar']; ?>" required>
+                        <div class="invalid-feedback" id="stok-warning" style="display: none;">
+                            Jumlah keluar tidak boleh melebihi stok tersedia!
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="keterangan" class="form-label">Keterangan</label>
+                        <textarea class="form-control" name="keterangan" rows="3"><?php echo $data['keterangan']; ?></textarea>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary custom-btn" id="submitBtn">
+                        <i class="fas fa-save me-1"></i> Simpan Perubahan
+                    </button>
+                    <a href="?page=barangkeluar" class="btn btn-secondary custom-btn">
+                        <i class="fas fa-times me-1"></i> Batal
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<?php
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
+
+// Proses update data
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $id_barang_keluar = $_POST['id_barang_keluar'];
+    $id_barang = $_POST['kode_barang'];
+    $tanggal_keluar = $_POST['tanggal_keluar'];
+    $jumlah_keluar = $_POST['jumlah_keluar'];
+    $jumlah_keluar_lama = $_POST['jumlah_keluar_lama'];
+    $id_barang_lama = $_POST['id_barang_lama'];
+    $keterangan = $_POST['keterangan'];
+
+    // Mulai transaksi
+    $koneksi->begin_transaction();
+
+    try {
+        // Update barang_keluar
+        $sql_update = "UPDATE barang_keluar SET 
+                      tanggal_keluar = ?, 
+                      id_barang = ?, 
+                      jumlah_keluar = ?, 
+                      keterangan = ? 
+                      WHERE id_barang_keluar = ?";
+        $stmt = $koneksi->prepare($sql_update);
+        $stmt->bind_param("siisi", $tanggal_keluar, $id_barang, $jumlah_keluar, $keterangan, $id_barang_keluar);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Error updating barang_keluar: " . $stmt->error);
+        }
+
+        // Kembalikan stok lama
+        $sql_restore = "UPDATE gudang SET jumlah = jumlah + ? WHERE id = ?";
+        $stmt_restore = $koneksi->prepare($sql_restore);
+        $stmt_restore->bind_param("ii", $jumlah_keluar_lama, $id_barang_lama);
+        
+        if (!$stmt_restore->execute()) {
+            throw new Exception("Error restoring stock: " . $stmt_restore->error);
+        }
+
+        // Update stok baru
+        $sql_update_stok = "UPDATE gudang SET jumlah = jumlah - ? WHERE id = ?";
+        $stmt_update_stok = $koneksi->prepare($sql_update_stok);
+        $stmt_update_stok->bind_param("ii", $jumlah_keluar, $id_barang);
+        
+        if (!$stmt_update_stok->execute()) {
+            throw new Exception("Error updating stock: " . $stmt_update_stok->error);
+        }
+
+        // Commit transaksi
+        $koneksi->commit();
+        
+        echo "<script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Data barang keluar berhasil diubah',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(function() {
+                    window.location.href = '?page=barangkeluar';
+                });
+              </script>";
+    } catch (Exception $e) {
+        // Rollback jika terjadi error
+        $koneksi->rollback();
+        
+        echo "<script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Terjadi kesalahan: " . addslashes($e->getMessage()) . "',
+                    showConfirmButton: true
+                });
+              </script>";
+    }
+}
+?>
+
+<script>
+$(document).ready(function() {
+    $('.select2').select2({
+        theme: 'bootstrap4',
+        width: '100%'
+    });
+
+    $('#kode_barang').change(function() {
+        var selectedOption = $(this).find('option:selected');
+        $('#jenis_barang').val(selectedOption.data('jenis'));
+        $('#nama_barang').val(selectedOption.data('nama'));
+        $('#satuan').val(selectedOption.data('satuan'));
+        $('#stok_tersedia').val(selectedOption.data('stok'));
+    });
+
+    $('#jumlah_keluar').on('input', function() {
+        var stokTersedia = parseInt($('#stok_tersedia').val()) || 0;
+        var jumlahKeluar = parseInt($(this).val()) || 0;
+        
+        if (jumlahKeluar > stokTersedia) {
+            $('#stok-warning').show();
+            $('#submitBtn').prop('disabled', true);
+        } else {
+            $('#stok-warning').hide();
+            $('#submitBtn').prop('disabled', false);
+        }
+    });
+});
+</script>
